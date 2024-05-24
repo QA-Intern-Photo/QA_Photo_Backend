@@ -14,11 +14,42 @@ datasource db {
 }
 
 model User {
-  id    String @id @default(uuid())
-  email String @unique
-  firstName String
-  lastName String
-  address String?
+  id        String   @id @default(uuid())
+  email     String?  @unique
+  nickname  String
+  password  String
+  points    Int?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Notification {
+  id      String @id @default(uuid())
+  userId  String @default(uuid())
+  content String
+}
+
+model Purchase {
+  id      String @id @default(uuid())
+  buyerId String @default(uuid())
+  cardId  String @default(uuid())
+}
+
+model Card {
+  id                String @id @default(uuid())
+  ownerId           String @default(uuid())
+  name              String
+  price             Int
+  grade             String
+  genre             String
+  dexcription       String
+  totalQuantity     Int
+  remainingQuantity Int
+}
+
+model Store {
+  id       String @id @default(uuid())
+  sellerId String @default(uuid())
+  cardId   String @default(uuid())
+  price    Int
 }
