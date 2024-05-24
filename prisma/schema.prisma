@@ -25,6 +25,7 @@ model User {
   Purchase     Purchase[]
   Card         Card[]
   Store        Store[]
+  Exchange     Exchange[]
 }
 
 model Notification {
@@ -42,8 +43,8 @@ model Purchase {
 }
 
 model Card {
-  id                String  @id @default(uuid())
-  user              User    @relation(fields: [ownerId], references: [id])
+  id                String @id @default(uuid())
+  user              User   @relation(fields: [ownerId], references: [id])
   ownerId           String
   name              String
   price             Int
@@ -62,4 +63,11 @@ model Store {
   card     Card   @relation(fields: [cardId], references: [id])
   cardId   String @unique
   price    Int
+}
+
+model Exchange {
+  id     String @id @default(uuid())
+  user   User   @relation(fields: [requesterId], references: [id])
+  requesterId String
+  
 }
