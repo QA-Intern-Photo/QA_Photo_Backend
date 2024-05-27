@@ -1,12 +1,19 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import express from "express";
 import { authRouter } from "./routes/auth.js";
+import swaggerUi from "swagger-ui-express";
+import swaggerJsdoc from "swagger-jsdoc";
+import { options } from "./swagger/config.js";
 import cors from "cors";
+
 const corsOptions = {
-  origin: ["http://127.0.0.1:5500"]
+  origin: ["http://localhost:3000"]
 };
 const app = express();
 app.use(cors(corsOptions));
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerJsdoc(options)));
+
 app.use(express.json()); //req.body 읽기위함
 //routing
 app.use("/api/auth", authRouter);

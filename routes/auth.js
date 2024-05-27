@@ -10,7 +10,7 @@ const prisma = new PrismaClient();
 export const authRouter = express.Router();
 
 authRouter.get("/test", (req, res) => {
-  res.send(console.log("test"));
+  res.send("test");
 });
 //회원가입
 authRouter.post("/signup", async (req, res) => {
