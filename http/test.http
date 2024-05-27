@@ -1,4 +1,4 @@
-GET http://localhost:3000/user
+GET http://localhost:3000/auth/test
 
 ###
 
@@ -7,7 +7,7 @@ Content-Type: application/json
 
 {
     "nickname" : "jieun5",
-    "email" : "jieun5@test.com",
+    "email" : "jieun7@test.com",
     "password":"password"
 }
 
