@@ -6,3 +6,5 @@ export const CreateUser = s.object({
   nickname: s.size(s.string(), 1, 50),
   password: s.size(s.string(), 1, 50)
 });
+
+export const LoginUser = s.partial(CreateUser);

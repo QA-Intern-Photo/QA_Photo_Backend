@@ -1,15 +1,12 @@
+import { Prisma, PrismaClient } from "@prisma/client";
 import express from "express";
-import { PrismaClient, Prisma } from "@prisma/client";
-import { CreateUser } from "./structs.js";
-import { assert } from "superstruct";
+import { authRouter } from "./routes/auth.js";
 
-const prisma = new PrismaClient();
 const app = express();
 app.use(express.json()); //req.body 읽기위함
 
-app.get("/user", (req, res) => {
-  res.send("test");
-});
+//routing
+app.use("/api/auth", authRouter);
 
 function asyncHandler(handler) {
   return async function (req, res) {
@@ -32,18 +29,5 @@ function asyncHandler(handler) {
     }
   };
 }
-
-app.post("/api/auth/signup", async (req, res) => {
-  try {
-    assert(req.body, CreateUser);
-    // req.body.password = "diff";
-    const user = await prisma.user.create({ data: req.body });
-    res.status(201).send(user);
-  } catch (e) {
-    if (e.code === "P2002")
-      return res.status(500).send({ message: "중복이메일" });
-    return res.status(500).send({ message: e.message });
-  }
-});
 
 app.listen(3000, () => console.log("Server Started"));
