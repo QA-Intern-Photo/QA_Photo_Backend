@@ -19,3 +19,8 @@ Content-Type: application/json
     "email" : "jieun3@test.com",
     "password":"diff"
 }
+
+###
+POST http://localhost:3000/api/auth/logout
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4NWI0NDgzZS0zNjM4LTRmODEtOGVlZS1iNmEyNjFkODI4YmUiLCJpYXQiOjE3MTY3Nzg2NjIsImV4cCI6MTcxNjg2NTA2Mn0.6nY5Cc8YbgeaJIyfbCWKMJp7I56u6vnk-KNrd8YFh98

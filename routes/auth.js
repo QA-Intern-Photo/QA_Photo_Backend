@@ -3,6 +3,8 @@ import { CreateUser, LoginUser } from "../structs.js";
 import { assert } from "superstruct";
 import jwt from "jsonwebtoken";
 import { PrismaClient, Prisma } from "@prisma/client";
+import { verifyToken } from "../util/jwt-verify.js";
+
 const prisma = new PrismaClient();
 
 export const authRouter = express.Router();
@@ -32,13 +34,22 @@ authRouter.post("/login", async (req, res) => {
     const user = await prisma.user.findUnique({
       where: { email, password }
     });
+
     if (user) {
-      const accessToken = jwt.sign({ email }, process.env.JWT_SECRET, {
-        expiresIn: "1d"
-      });
-      const refreshToken = jwt.sign({ email }, process.env.JWT_SECRET, {
-        expiresIn: "7d"
-      });
+      const accessToken = jwt.sign(
+        { userId: user.id },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: "1d"
+        }
+      );
+      const refreshToken = jwt.sign(
+        { userId: user.id },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: "7d"
+        }
+      );
 
       return res.send({
         accessToken,
@@ -46,14 +57,18 @@ authRouter.post("/login", async (req, res) => {
       });
     }
 
-    return res.status(404).send({ status: 404, message: "User not found" });
+    return res
+      .status(404)
+      .send({ status: 404, message: "존재하지 않는 유저입니다." });
   } catch (e) {
     return res.status(500).send({ message: e.message });
   }
 });
 
 //로그아웃
-authRouter.post("/logout", async (req, res) => {});
+authRouter.post("/logout", verifyToken, async (req, res) => {
+  res.send(req.decoded.userId);
+});
 
 //토큰 갱신
 authRouter.post("/refresh", async (req, res) => {});
