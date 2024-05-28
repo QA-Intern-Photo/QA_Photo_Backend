@@ -17,8 +17,9 @@ authRouter.post("/signup", async (req, res) => {
   try {
     assert(req.body, CreateUser);
     // req.body.password = "diff";
-    const user = await prisma.user.create({ data: req.body });
-    res.status(201).send(user);
+    const { email, nickname, points, createdAt, updatedAt } =
+      await prisma.user.create({ data: req.body });
+    res.status(201).send({ email, nickname, points, createdAt, updatedAt });
   } catch (e) {
     if (e.code === "P2002")
       return res.status(409).send({ message: "중복이메일" });

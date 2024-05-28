@@ -18,7 +18,7 @@ model User {
   email        String?        @unique
   nickname     String
   password     String
-  points       Int?
+  points       Int            @default(0)
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
   Notification Notification[]
@@ -66,8 +66,7 @@ model Store {
 }
 
 model Exchange {
-  id     String @id @default(uuid())
-  user   User   @relation(fields: [requesterId], references: [id])
+  id          String @id @default(uuid())
+  user        User   @relation(fields: [requesterId], references: [id])
   requesterId String
-  
 }

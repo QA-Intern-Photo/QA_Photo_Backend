@@ -1,0 +1,4 @@
+###
+GET http://localhost:3000/api/users/profile
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI5OGFjZjZiMS04OWExLTRiOTktYmQ4My1jOTZjNDhlN2U0YmYiLCJpYXQiOjE3MTY4NzMzNjEsImV4cCI6MTcxNjk1OTc2MX0.ihVl_UtBeXO9DmtH0zch0u43PX3Xrpw0cIm7fW3S7QU

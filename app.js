@@ -1,6 +1,7 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import express from "express";
 import { authRouter } from "./routes/auth.js";
+import { userRouter } from "./routes/users.js";
 // import swaggerUi from "swagger-ui-express";
 // import swaggerJsdoc from "swagger-jsdoc";
 // import { options } from "./swagger/config.js";
@@ -15,8 +16,10 @@ app.use(cors(corsOptions));
 // app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerJsdoc(options)));
 
 app.use(express.json()); //req.body 읽기위함
+
 //routing
 app.use("/api/auth", authRouter);
+app.use("/api/users", userRouter);
 
 function asyncHandler(handler) {
   return async function (req, res) {

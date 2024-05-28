@@ -6,8 +6,8 @@ POST http://localhost:3000/api/auth/signup
 Content-Type: application/json
 
 {
-    "nickname" : "jieun8",
-    "email" : "jieun8@test.com",
+    "nickname" : "jieun2",
+    "email" : "jieun2@test.com",
     "password":"password"
 }
 
@@ -16,8 +16,8 @@ POST http://localhost:3000/api/auth/login
 Content-Type: application/json
 
 {
-    "email" : "jieun3@test.com",
-    "password":"diff"
+    "email" : "jieun2@test.com",
+    "password":"password"
 }
 
 ###
@@ -32,3 +32,4 @@ Content-Type: application/json
 {
    "refreshToken" : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4NWI0NDgzZS0zNjM4LTRmODEtOGVlZS1iNmEyNjFkODI4YmUiLCJpYXQiOjE3MTY3Nzk1NjYsImV4cCI6MTcxNjc3OTYyNn0.NFYJONmg06sBRo8gDL8AG6Wl_QLi8XbmtuI0aPPmqj4"
 }
+
