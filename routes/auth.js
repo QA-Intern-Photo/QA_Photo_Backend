@@ -67,7 +67,7 @@ authRouter.post("/login", async (req, res) => {
 
 //로그아웃
 authRouter.post("/logout", verifyToken, async (req, res) => {
-  res.send(req.decoded.userId);
+  res.send({status:200, message:"로그아웃 성공"});
 });
 
 //토큰 갱신

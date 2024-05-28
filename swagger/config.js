@@ -4,8 +4,7 @@ export const options = {
     info: {
       title: "최애의 포토 API 명세서",
       version: "1.0.0"
-    },
-    host: "localhost:8001"
+    }
   },
-  apis: ["./swagger/*.swagger.js"] // files containing annotations as above
+  apis: ["./swagger/*.js"] // files containing annotations as above
 };
