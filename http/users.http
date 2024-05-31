@@ -1,4 +1,18 @@
 ###
 GET http://localhost:3000/api/users/profile
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI5OGFjZjZiMS04OWExLTRiOTktYmQ4My1jOTZjNDhlN2U0YmYiLCJpYXQiOjE3MTY4NzMzNjEsImV4cCI6MTcxNjk1OTc2MX0.ihVl_UtBeXO9DmtH0zch0u43PX3Xrpw0cIm7fW3S7QU
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI3ZTAwMWMzNC01ODc5LTRlNDAtODNhNi0yNzM4ODA2MTRlZDIiLCJpYXQiOjE3MTY4NzgyMjUsImV4cCI6MTcxNjk2NDYyNX0.UTNx7KCtlEhxxJSi8E4yJX-Oznsb24uVUo1EeFNWvAU
+
+###
+POST http://localhost:3000/api/users/my-cards
+Content-Type: multipart/form-data
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI3ZTAwMWMzNC01ODc5LTRlNDAtODNhNi0yNzM4ODA2MTRlZDIiLCJpYXQiOjE3MTY4NzgyMjUsImV4cCI6MTcxNjk2NDYyNX0.UTNx7KCtlEhxxJSi8E4yJX-Oznsb24uVUo1EeFNWvAU
+
+{
+    "name":"뉴욕 길거리",
+    "description" : "2020년 미국 여행에서 만난 뉴욕 길거리",
+    "price":2,
+    "totalQuantity" : 5,
+    "genre" : "LANDSCAPE",
+    "grade":"COMMON"
+}

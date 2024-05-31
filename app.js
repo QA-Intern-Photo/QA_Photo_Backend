@@ -7,12 +7,20 @@ import { userRouter } from "./routes/users.js";
 // import { options } from "./swagger/config.js";
 import cors from "cors";
 
+import path from "path";
+
 const corsOptions = {
   origin: ["http://localhost:3000"]
 };
 const app = express();
+const __dirname = path.resolve();
+app.use(express.static(path.join(__dirname, "./public")));
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "./public/index.html"));
+});
 app.use(cors(corsOptions));
 
+app.use("/image", express.static(path.join(__dirname, "files")));
 // app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerJsdoc(options)));
 
 app.use(express.json()); //req.body 읽기위함
