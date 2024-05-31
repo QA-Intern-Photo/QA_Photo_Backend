@@ -1,0 +1,24 @@
+<html lang="en">
+  <head>
+    <title>Image Server</title>
+  </head>
+  <body>
+    <form
+      action="/api/users/my-cards"
+      method="POST"
+      enctype="multipart/form-data"
+    >
+      <input type="file" name="image" />
+      <input type="text" name="name" value="사과" />
+      <input type="text" name="description" value="아침사과 황금사과" />
+      <input type="text" name="genre" value="OBJECT" />
+      <input type="text" name="grade" value="COMMON" />
+      <input type="number" name="price" value="4" />
+      <input type="number" name="totalQuantity" value="2" />
+      <button type="submit">Upload</button>
+      <img
+        src="http://localhost:3000/image/PROFILE/3165faea9b27492468a5aa427abff9c7"
+      />
+    </form>
+  </body>
+</html>

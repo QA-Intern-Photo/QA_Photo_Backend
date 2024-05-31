@@ -17,11 +17,12 @@ authRouter.post("/signup", async (req, res) => {
   try {
     assert(req.body, CreateUser);
     // req.body.password = "diff";
-    const user = await prisma.user.create({ data: req.body });
-    res.status(201).send(user);
+    const { email, nickname, points, createdAt, updatedAt } =
+      await prisma.user.create({ data: req.body });
+    res.status(201).send({ email, nickname, points, createdAt, updatedAt });
   } catch (e) {
     if (e.code === "P2002")
-      return res.status(500).send({ message: "중복이메일" });
+      return res.status(409).send({ message: "중복이메일" });
     return res.status(500).send({ message: e.message });
   }
 });
@@ -67,7 +68,7 @@ authRouter.post("/login", async (req, res) => {
 
 //로그아웃
 authRouter.post("/logout", verifyToken, async (req, res) => {
-  res.send({status:200, message:"로그아웃 성공"});
+  res.send({ status: 200, message: "로그아웃 성공" });
 });
 
 //토큰 갱신

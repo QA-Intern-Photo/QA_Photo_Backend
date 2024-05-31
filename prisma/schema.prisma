@@ -18,7 +18,7 @@ model User {
   email        String?        @unique
   nickname     String
   password     String
-  points       Int?
+  points       Int            @default(0)
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
   Notification Notification[]
@@ -43,16 +43,18 @@ model Purchase {
 }
 
 model Card {
-  id                String @id @default(uuid())
-  user              User   @relation(fields: [ownerId], references: [id])
+  id                String   @id @default(uuid())
+  user              User     @relation(fields: [ownerId], references: [id])
   ownerId           String
+  image             String
   name              String
   price             Int
-  grade             String
-  genre             String
-  dexcription       String
-  totalQuantity     Int
+  grade             Grade    @default(COMMON)
+  genre             Genre    @default(LANDSCAPE)
+  description       String
+  totalQuantity     Int      @default(1)
   remainingQuantity Int
+  createdAt         DateTime @default(now())
   store             Store?
 }
 
@@ -66,8 +68,21 @@ model Store {
 }
 
 model Exchange {
-  id     String @id @default(uuid())
-  user   User   @relation(fields: [requesterId], references: [id])
+  id          String @id @default(uuid())
+  user        User   @relation(fields: [requesterId], references: [id])
   requesterId String
-  
+}
+
+enum Genre {
+  TRIP
+  PORTRAIT
+  OBJECT
+  LANDSCAPE
+}
+
+enum Grade {
+  COMMON
+  RARE
+  SUPER_RARE
+  LEGENDARY
 }

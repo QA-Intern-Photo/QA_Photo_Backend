@@ -8,3 +8,16 @@ export const CreateUser = s.object({
 });
 
 export const LoginUser = s.partial(CreateUser);
+
+//card
+const GENRE = ["PORTRAIT", "LANDSCAPE", "OBJECT", "TRIP"];
+const GRADE = ["COMMON", "RARE", "SUPER_RARE", "LEGENDARY"];
+
+export const CreateCard = s.object({
+  name: s.string(),
+  description: s.string(),
+  genre: s.enums(GENRE),
+  grade: s.enums(GRADE),
+  price: s.string(),
+  totalQuantity: s.string()
+});
