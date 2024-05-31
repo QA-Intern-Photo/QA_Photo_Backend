@@ -13,9 +13,23 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Genre {
+  TRIP
+  PORTRAIT
+  OBJECT
+  LANDSCAPE
+}
+
+enum Grade {
+  COMMON
+  RARE
+  SUPER_RARE
+  LEGENDARY
+}
+
 model User {
   id           String         @id @default(uuid())
-  email        String        @unique
+  email        String         @unique
   nickname     String
   password     String
   points       Int            @default(0)
@@ -71,18 +85,4 @@ model Exchange {
   id          String @id @default(uuid())
   user        User   @relation(fields: [requesterId], references: [id])
   requesterId String
-}
-
-enum Genre {
-  TRIP
-  PORTRAIT
-  OBJECT
-  LANDSCAPE
-}
-
-enum Grade {
-  COMMON
-  RARE
-  SUPER_RARE
-  LEGENDARY
 }
