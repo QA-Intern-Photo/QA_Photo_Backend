@@ -15,15 +15,8 @@ export const upload = multer({
   storage: multerS3({
     s3: client,
     bucket: process.env.AWS_S3_BUCKET,
-    // acl: "public-read",
     key: (req, file, cb) => {
-      const fileName =
-        "/image/CARD/" +
-        "_" +
-        file.fieldname +
-        "_" +
-        file.originalname +
-        Date.now();
+      const fileName = "/image/CARD/" + file.originalname;
       cb(null, fileName);
     }
   })
