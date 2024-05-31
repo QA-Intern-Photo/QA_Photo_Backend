@@ -1,6 +1,21 @@
--- AlterTable
-ALTER TABLE "User" ADD COLUMN     "points" INTEGER,
-ALTER COLUMN "email" DROP NOT NULL;
+-- CreateEnum
+CREATE TYPE "Genre" AS ENUM ('TRIP', 'PORTRAIT', 'OBJECT', 'LANDSCAPE');
+
+-- CreateEnum
+CREATE TYPE "Grade" AS ENUM ('COMMON', 'RARE', 'SUPER_RARE', 'LEGENDARY');
+
+-- CreateTable
+CREATE TABLE "User" (
+    "id" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "nickname" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
+    "points" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateTable
 CREATE TABLE "Notification" (
@@ -24,13 +39,15 @@ CREATE TABLE "Purchase" (
 CREATE TABLE "Card" (
     "id" TEXT NOT NULL,
     "ownerId" TEXT NOT NULL,
+    "image" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "price" INTEGER NOT NULL,
-    "grade" TEXT NOT NULL,
-    "genre" TEXT NOT NULL,
-    "dexcription" TEXT NOT NULL,
-    "totalQuantity" INTEGER NOT NULL,
+    "grade" "Grade" NOT NULL DEFAULT 'COMMON',
+    "genre" "Genre" NOT NULL DEFAULT 'LANDSCAPE',
+    "description" TEXT NOT NULL,
+    "totalQuantity" INTEGER NOT NULL DEFAULT 1,
     "remainingQuantity" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Card_pkey" PRIMARY KEY ("id")
 );
@@ -44,6 +61,20 @@ CREATE TABLE "Store" (
 
     CONSTRAINT "Store_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateTable
+CREATE TABLE "Exchange" (
+    "id" TEXT NOT NULL,
+    "requesterId" TEXT NOT NULL,
+
+    CONSTRAINT "Exchange_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Store_cardId_key" ON "Store"("cardId");
 
 -- AddForeignKey
 ALTER TABLE "Notification" ADD CONSTRAINT "Notification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -59,3 +90,6 @@ ALTER TABLE "Store" ADD CONSTRAINT "Store_sellerId_fkey" FOREIGN KEY ("sellerId"
 
 -- AddForeignKey
 ALTER TABLE "Store" ADD CONSTRAINT "Store_cardId_fkey" FOREIGN KEY ("cardId") REFERENCES "Card"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Exchange" ADD CONSTRAINT "Exchange_requesterId_fkey" FOREIGN KEY ("requesterId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
