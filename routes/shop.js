@@ -35,7 +35,7 @@ shopRouter.post("/", verifyToken, async (req, res) => {
       wishExchangeGrade,
       wishExchageDescription
     } = req.body;
-    
+
     const shop = await prisma.shop.create({
       data: {
         cardId,
@@ -121,12 +121,12 @@ shopRouter.get("/", verifyToken, async (req, res) => {
 
       relationLoadStrategy: "join", // or 'query'
       select: {
+        id: true,
         sellingPrice: true,
         sellingQuantity: true,
         remainingQuantity: true,
         card: {
           select: {
-            id: true,
             image: true,
             grade: true,
             genre: true,
@@ -166,6 +166,7 @@ shopRouter.get("/", verifyToken, async (req, res) => {
       const card = { ...v.card };
       delete card.user;
       return {
+        id: v.id,
         ...card,
         price: v.sellingPrice,
         totalQuantity: v.sellingQuantity,
@@ -188,6 +189,100 @@ shopRouter.get("/", verifyToken, async (req, res) => {
   } catch (e) {
     return res.status(500).send({ message: e.message });
   }
+});
+
+//상점 상세 조회
+shopRouter.get("/:id", verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = await prisma.shop.get({
+      where: { id },
+      select: {
+        id: true,
+        sellingPrice: true,
+        sellingQuantity: true,
+        remainingQuantity: true,
+        card: {
+          select: {
+            image: true,
+            grade: true,
+            genre: true,
+            name: true,
+            user: { select: { nickname: true } }
+          }
+        }
+      }
+    });
+
+    const processedData = data.map((v) => {
+      const card = { ...v.card };
+      delete card.user;
+      return {
+        ...card,
+        price: v.sellingPrice,
+        totalQuantity: v.sellingQuantity,
+        remainingQuantity: v.remainingQuantity,
+        seller_nickname: v.card.user.nickname,
+        isOwner: false
+      };
+    });
+
+    let exchangeCardData;
+    //해당 카드 판매자라면 받은 교환제시 조회
+    if (data.sellerId === req.decoded.userId) {
+      processedData.isOwner = true;
+
+      exchangeCardData = await prisma.exchange.findMany({
+        where: {
+          targetCardId: id
+        },
+        select: {
+          requestMessage,
+          card: {
+            image: true,
+            grade: true,
+            genre: true,
+            name: true,
+            price: true,
+            user: { select: { nickname: true } }
+          }
+        }
+      });
+    } else {
+      //해당 카드의 판매자가 아니라면 내가 교환제시한 목록 조회
+      exchangeCardData = await prisma.exchange.findMany({
+        where: {
+          targetCardId: id,
+          requesterId: req.decoded.userId
+        },
+        select: {
+          requestMessage,
+          card: {
+            image: true,
+            grade: true,
+            genre: true,
+            name: true,
+            price: true,
+            user: { select: { nickname: true } }
+          }
+        }
+      });
+    }
+
+    const processedExchangeData = exchangeCardData.map((v) => {
+      const card = { ...v.card };
+      delete card.user;
+      return {
+        ...card,
+        nickname: v.card.user.nickname,
+        requestMessage: v.requestMessage
+      };
+    });
+
+    res
+      .status(201)
+      .send({ ...processedData, exchangeRequest: processedExchangeData });
+  } catch (e) {}
 });
 
 //모든 카드 가져오기

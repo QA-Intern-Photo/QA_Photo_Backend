@@ -96,10 +96,11 @@ model Shop {
 }
 
 model Exchange {
-  id            String @id @default(uuid())
-  shop          Shop   @relation(fields: [targetCardId], references: [id])
-  targetCardId  String
-  card          Card   @relation(fields: [offeredCardId, requesterId], references: [id, ownerId])
-  offeredCardId String
-  requesterId   String
+  id             String @id @default(uuid())
+  shop           Shop   @relation(fields: [targetCardId], references: [id])
+  targetCardId   String
+  card           Card   @relation(fields: [offeredCardId, requesterId], references: [id, ownerId])
+  offeredCardId  String
+  requesterId    String
+  requestMessage String
 }
