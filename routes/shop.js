@@ -63,7 +63,7 @@ shopRouter.put("/:id", verifyToken, async (req, res) => {
 });
 
 //상점 조회
-shopRouter.get("/", async (req, res) => {
+shopRouter.get("/", verifyToken, async (req, res) => {
   try {
     const {
       page = 1,
@@ -71,8 +71,8 @@ shopRouter.get("/", async (req, res) => {
       order = "high_price",
       grade,
       genre,
-      keyword = "cute"
-    } = req.query;
+      keyword
+    } = req.body;
     let orderBy;
     switch (order) {
       case "oldest":
@@ -90,19 +90,24 @@ shopRouter.get("/", async (req, res) => {
     }
 
     const data = await prisma.shop.findMany({
-      orderBy,
-      skip: (parseInt(page) - 1) * parseInt(size),
-      take: parseInt(size),
       where: {
         card: {
-          grade,
-          genre,
-          OR: [
-            { name: { contains: keyword } },
-            { description: { contains: keyword } }
+          AND: [
+            { grade },
+            { genre },
+            {
+              OR: [
+                { name: { contains: keyword } },
+                { description: { contains: keyword } }
+              ]
+            }
           ]
         }
       },
+      orderBy,
+      skip: (parseInt(page) - 1) * parseInt(size),
+      take: parseInt(size),
+
       relationLoadStrategy: "join", // or 'query'
       select: {
         sellingPrice: true,
@@ -124,8 +129,16 @@ shopRouter.get("/", async (req, res) => {
     const totalData = await prisma.shop.findMany({
       where: {
         card: {
-          grade,
-          genre
+          AND: [
+            { grade },
+            { genre },
+            {
+              OR: [
+                { name: { contains: keyword } },
+                { description: { contains: keyword } }
+              ]
+            }
+          ]
         }
       },
       select: {
