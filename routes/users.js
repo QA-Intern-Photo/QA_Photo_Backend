@@ -1,7 +1,7 @@
 import express from "express";
-import { CreateCard, CreateUser } from "../structs.js";
-import { assert, number } from "superstruct";
-import { PrismaClient, Prisma } from "@prisma/client";
+import { CreateCard } from "../structs.js";
+import { assert} from "superstruct";
+import { PrismaClient} from "@prisma/client";
 import { verifyToken } from "../util/jwt-verify.js";
 import { upload } from "../util/upload-image.js";
 const prisma = new PrismaClient();

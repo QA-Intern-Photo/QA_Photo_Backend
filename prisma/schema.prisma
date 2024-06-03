@@ -27,6 +27,11 @@ enum Grade {
   LEGENDARY
 }
 
+enum CardStatus {
+  SALE
+  NOT_FOR_SALE
+}
+
 model User {
   id           String         @id @default(uuid())
   email        String         @unique
@@ -38,7 +43,6 @@ model User {
   Notification Notification[]
   Purchase     Purchase[]
   Card         Card[]
-  Store        Store[]
   Exchange     Exchange[]
 }
 
@@ -57,28 +61,35 @@ model Purchase {
 }
 
 model Card {
-  id                String   @id @default(uuid())
-  user              User     @relation(fields: [ownerId], references: [id])
-  ownerId           String
-  image             String
-  name              String
-  price             Int
-  grade             Grade    @default(COMMON)
-  genre             Genre    @default(LANDSCAPE)
-  description       String
-  totalQuantity     Int      @default(1)
-  remainingQuantity Int
-  createdAt         DateTime @default(now())
-  store             Store?
+  id                 String     @default(uuid())
+  user               User       @relation(fields: [ownerId], references: [id])
+  ownerId            String
+  image              String
+  name               String
+  price              Int
+  grade              Grade      @default(COMMON)
+  genre              Genre      @default(LANDSCAPE)
+  description        String
+  totalQuantity      Int        @default(1)
+  remainingQuantity  Int
+  sellingQuantity    Int        @default(0)
+  exchangingQuantity Int        @default(0)
+  status             CardStatus @default(NOT_FOR_SALE)
+  createdAt          DateTime   @default(now())
+  shop               Shop?
+
+  @@id([id, ownerId])
 }
 
-model Store {
-  id       String @id @default(uuid())
-  user     User   @relation(fields: [sellerId], references: [id])
-  sellerId String
-  card     Card   @relation(fields: [cardId], references: [id])
-  cardId   String @unique
-  price    Int
+model Shop {
+  card         Card     @relation(fields: [cardId, sellerId], references: [id, ownerId])
+  cardId       String   @default("")
+  sellerId     String   @default("")
+  sellingPrice Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@id([cardId, sellerId])
 }
 
 model Exchange {

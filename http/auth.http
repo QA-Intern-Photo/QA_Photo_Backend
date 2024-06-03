@@ -6,8 +6,8 @@ POST http://localhost:3000/api/auth/signup
 Content-Type: application/json
 
 {
-    "nickname" : "jieun1",
-    "email" : "jieun1@test.com",
+    "nickname" : "jieun2",
+    "email" : "jieun2@test.com",
     "password":"password"
 }
 
@@ -16,7 +16,7 @@ POST http://localhost:3000/api/auth/login
 Content-Type: application/json
 
 {
-    "email" : "jieun1@test.com",
+    "email" : "jieun2@test.com",
     "password":"password"
 }
 
