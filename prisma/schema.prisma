@@ -80,16 +80,19 @@ model Card {
 }
 
 model Shop {
-  id                String     @id @default(uuid())
-  card              Card       @relation(fields: [cardId, sellerId], references: [id, ownerId])
-  cardId            String     @default("")
-  sellerId          String     @default("")
-  sellingPrice      Int
-  remainingQuantity Int
-  sellingQuantity   Int        @default(0)
-  createdAt         DateTime   @default(now())
-  updatedAt         DateTime   @updatedAt
-  exchange          Exchange[]
+  id                     String     @id @default(uuid())
+  card                   Card       @relation(fields: [cardId, sellerId], references: [id, ownerId])
+  cardId                 String     @default("")
+  sellerId               String     @default("")
+  sellingPrice           Int
+  remainingQuantity      Int
+  sellingQuantity        Int        @default(0)
+  createdAt              DateTime   @default(now())
+  updatedAt              DateTime   @updatedAt
+  wishExchangeGenre      Genre      @default(LANDSCAPE)
+  wishExchangeGrade      Grade      @default(COMMON)
+  wishExchageDescription String
+  exchange               Exchange[]
 }
 
 model Exchange {

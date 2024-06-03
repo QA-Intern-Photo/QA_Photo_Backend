@@ -27,14 +27,25 @@ shopRouter.post("/", verifyToken, async (req, res) => {
   try {
     const sellerId = req.decoded.userId;
 
-    const { cardId, sellingQuantity, sellingPrice } = req.body;
+    const {
+      cardId,
+      sellingQuantity,
+      sellingPrice,
+      wishExchangeGenre,
+      wishExchangeGrade,
+      wishExchageDescription
+    } = req.body;
+    
     const shop = await prisma.shop.create({
       data: {
         cardId,
         sellingPrice: Number(sellingPrice),
         sellerId,
         sellingQuantity: Number(sellingQuantity),
-        remainingQuantity: Number(sellingQuantity)
+        remainingQuantity: Number(sellingQuantity),
+        wishExchangeGenre,
+        wishExchangeGrade,
+        wishExchageDescription
       }
     });
 
