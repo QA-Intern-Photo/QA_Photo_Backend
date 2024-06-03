@@ -38,6 +38,86 @@ userRouter.post(
   }
 );
 
+//내 카드 조회
+userRouter.get("/my-cards", verifyToken, async (req, res) => {
+  try {
+    const {
+      page = 1,
+      size = 5,
+      order = "high_price",
+      grade,
+      genre,
+      keyword
+    } = req.body;
+
+    const data = await prisma.card.findMany({
+      where: {
+        AND: [
+          { genre },
+          { grade },
+          {
+            OR: [
+              { name: { contains: keyword } },
+              { description: { contains: keyword } }
+            ]
+          },
+          {
+            availableQuantity: { gt: 0 }
+          }
+        ]
+      },
+      orderBy: getOrderBy(order),
+      skip: (parseInt(page) - 1) * parseInt(size),
+      take: parseInt(size),
+      select: {
+        id: true,
+        image: true,
+        grade: true,
+        genre: true,
+        name: true,
+        user: { select: { nickname: true } }
+      }
+    });
+
+    const totalData = await prisma.card.findMany({
+      where: {
+        AND: [
+          { grade },
+          { genre },
+          {
+            OR: [
+              { name: { contains: keyword } },
+              { description: { contains: keyword } }
+            ]
+          },
+          {
+            availableQuantity: { gt: 0 }
+          }
+        ]
+      }
+    });
+
+    const totalCount = totalData.length;
+    const totalPages = Math.ceil(totalCount / size);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
+
+    res.status(201).send({
+      data,
+      pagination: {
+        totalCount,
+        totalPages,
+        currentPage: page,
+        pageSize: size,
+        hasNextPage,
+        hasPrevPage
+      }
+    });
+  } catch (e) {
+    return res.status(500).send({ message: e.message });
+  }
+});
+
 //프로필 조회
 userRouter.get("/profile", verifyToken, async (req, res) => {
   try {

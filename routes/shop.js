@@ -2,6 +2,7 @@ import express from "express";
 import { assert } from "superstruct";
 import { PrismaClient } from "@prisma/client";
 import { verifyToken } from "../util/jwt-verify.js";
+import { getOrderBy } from "../util/get-order-by.js";
 
 const prisma = new PrismaClient();
 export const shopRouter = express.Router();
@@ -84,21 +85,6 @@ shopRouter.get("/", verifyToken, async (req, res) => {
       genre,
       keyword
     } = req.body;
-    let orderBy;
-    switch (order) {
-      case "oldest":
-        orderBy = { createdAt: "asc" };
-        break;
-      case "newest":
-        orderBy = { createdAt: "desc" };
-        break;
-      case "low_price":
-        orderBy = { sellingPrice: "asc" };
-        break;
-      case "high_price":
-        orderBy = { sellingPrice: "desc" };
-        break;
-    }
 
     const data = await prisma.shop.findMany({
       where: {
@@ -115,7 +101,7 @@ shopRouter.get("/", verifyToken, async (req, res) => {
           ]
         }
       },
-      orderBy,
+      orderBy: getOrderBy(order),
       skip: (parseInt(page) - 1) * parseInt(size),
       take: parseInt(size),
 

@@ -9,6 +9,7 @@ import cors from "cors";
 
 import path from "path";
 import { shopRouter } from "./routes/shop.js";
+import { exchangeRouter } from "./routes/exchange.js";
 
 const corsOptions = {
   origin: ["http://localhost:3000"]
@@ -30,6 +31,7 @@ app.use(express.json()); //req.body 읽기위함
 app.use("/api/auth", authRouter);
 app.use("/api/users", userRouter);
 app.use("/api/shop/cards", shopRouter);
+app.use("/api/cards", exchangeRouter);
 function asyncHandler(handler) {
   return async function (req, res) {
     try {
