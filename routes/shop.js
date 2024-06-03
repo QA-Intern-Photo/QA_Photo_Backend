@@ -7,8 +7,9 @@ const prisma = new PrismaClient();
 export const shopRouter = express.Router();
 
 //포토카드 구매하기
-shopRouter.get(`/purchase`, verifyToken, async (req, res) => {
+shopRouter.get(`:id/purchase`, verifyToken, async (req, res) => {
   try {
+    const { id } = req.params;
     const { email, nickname, points, createdAt, updatedAt } =
       await prisma.shop.findUnique({
         where: { id }
@@ -31,7 +32,9 @@ shopRouter.post("/", verifyToken, async (req, res) => {
       data: {
         cardId,
         sellingPrice: Number(sellingPrice),
-        sellerId
+        sellerId,
+        sellingQuantity: Number(sellingQuantity),
+        remainingQuantity: Number(sellingQuantity)
       }
     });
 
@@ -42,19 +45,133 @@ shopRouter.post("/", verifyToken, async (req, res) => {
     await prisma.card.update({
       where: { id_ownerId: { id: cardId, ownerId: sellerId } },
       data: {
-        remainingQuantity:
-          card.totalQuantity -
-          Number(sellingQuantity) -
-          card.exchangingQuantity,
-        status: "SALE",
-        sellingQuantity: Number(sellingQuantity)
+        availableQuantity: card.availableQuantity - Number(sellingQuantity)
       }
     });
 
     res.status(201).send(shop);
   } catch (e) {
-    if (e.code === "P2002")
-      return res.status(409).send({ message: "이미 판매중인 카드입니다." });
+    return res.status(500).send({ message: e.message });
+  }
+});
+
+//내 판매포토카드 수정
+shopRouter.put("/:id", verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+  } catch (e) {}
+});
+
+//상점 조회
+shopRouter.get("/", async (req, res) => {
+  try {
+    const {
+      page = 1,
+      size = 5,
+      order = "high_price",
+      grade,
+      genre,
+      keyword = "cute"
+    } = req.query;
+    let orderBy;
+    switch (order) {
+      case "oldest":
+        orderBy = { createdAt: "asc" };
+        break;
+      case "newest":
+        orderBy = { createdAt: "desc" };
+        break;
+      case "low_price":
+        orderBy = { sellingPrice: "asc" };
+        break;
+      case "high_price":
+        orderBy = { sellingPrice: "desc" };
+        break;
+    }
+
+    const data = await prisma.shop.findMany({
+      orderBy,
+      skip: (parseInt(page) - 1) * parseInt(size),
+      take: parseInt(size),
+      where: {
+        card: {
+          grade,
+          genre,
+          OR: [
+            { name: { contains: keyword } },
+            { description: { contains: keyword } }
+          ]
+        }
+      },
+      relationLoadStrategy: "join", // or 'query'
+      select: {
+        sellingPrice: true,
+        sellingQuantity: true,
+        remainingQuantity: true,
+        card: {
+          select: {
+            id: true,
+            image: true,
+            grade: true,
+            genre: true,
+            name: true,
+            user: { select: { nickname: true } }
+          }
+        }
+      }
+    });
+
+    const totalData = await prisma.shop.findMany({
+      where: {
+        card: {
+          grade,
+          genre
+        }
+      },
+      select: {
+        card: true
+      }
+    });
+
+    const totalCount = totalData.length;
+    const totalPages = Math.ceil(totalCount / size);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
+
+    const processedData = data.map((v) => {
+      const card = { ...v.card };
+      delete card.user;
+      return {
+        ...card,
+        price: v.sellingPrice,
+        totalQuantity: v.sellingQuantity,
+        remainingQuantity: v.remainingQuantity,
+        seller_nickname: v.card.user.nickname
+      };
+    });
+
+    res.status(201).send({
+      data: processedData,
+      pagination: {
+        totalCount,
+        totalPages,
+        currentPage: page,
+        pageSize: size,
+        hasNextPage,
+        hasPrevPage
+      }
+    });
+  } catch (e) {
+    return res.status(500).send({ message: e.message });
+  }
+});
+
+//모든 카드 가져오기
+shopRouter.get("/test", async (req, res) => {
+  try {
+    const data = await prisma.card.findMany({});
+    res.status(201).send(data);
+  } catch (e) {
     return res.status(500).send({ message: e.message });
   }
 });

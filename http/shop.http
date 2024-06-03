@@ -1,0 +1,6 @@
+GET http://localhost:3000/api/shop/cards/
+Content-Type: application/json
+
+###
+GET http://localhost:3000/api/shop/cards/test
+Content-Type: application/json

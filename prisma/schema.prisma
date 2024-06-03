@@ -5,7 +5,8 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["relationJoins"]
 }
 
 datasource db {
@@ -43,7 +44,6 @@ model User {
   Notification Notification[]
   Purchase     Purchase[]
   Card         Card[]
-  Exchange     Exchange[]
 }
 
 model Notification {
@@ -61,39 +61,42 @@ model Purchase {
 }
 
 model Card {
-  id                 String     @default(uuid())
-  user               User       @relation(fields: [ownerId], references: [id])
-  ownerId            String
-  image              String
-  name               String
-  price              Int
-  grade              Grade      @default(COMMON)
-  genre              Genre      @default(LANDSCAPE)
-  description        String
-  totalQuantity      Int        @default(1)
-  remainingQuantity  Int
-  sellingQuantity    Int        @default(0)
-  exchangingQuantity Int        @default(0)
-  status             CardStatus @default(NOT_FOR_SALE)
-  createdAt          DateTime   @default(now())
-  shop               Shop?
+  id                String     @default(uuid())
+  user              User       @relation(fields: [ownerId], references: [id])
+  ownerId           String
+  image             String
+  name              String
+  price             Int
+  grade             Grade      @default(COMMON)
+  genre             Genre      @default(LANDSCAPE)
+  description       String
+  totalQuantity     Int        @default(1)
+  availableQuantity Int
+  createdAt         DateTime   @default(now())
+  shop              Shop[]
+  exchange          Exchange[]
 
   @@id([id, ownerId])
 }
 
 model Shop {
-  card         Card     @relation(fields: [cardId, sellerId], references: [id, ownerId])
-  cardId       String   @default("")
-  sellerId     String   @default("")
-  sellingPrice Int
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  @@id([cardId, sellerId])
+  id                String     @id @default(uuid())
+  card              Card       @relation(fields: [cardId, sellerId], references: [id, ownerId])
+  cardId            String     @default("")
+  sellerId          String     @default("")
+  sellingPrice      Int
+  remainingQuantity Int
+  sellingQuantity   Int        @default(0)
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  exchange          Exchange[]
 }
 
 model Exchange {
-  id          String @id @default(uuid())
-  user        User   @relation(fields: [requesterId], references: [id])
-  requesterId String
+  id            String @id @default(uuid())
+  shop          Shop   @relation(fields: [targetCardId], references: [id])
+  targetCardId  String
+  card          Card   @relation(fields: [offeredCardId, requesterId], references: [id, ownerId])
+  offeredCardId String
+  requesterId   String
 }
