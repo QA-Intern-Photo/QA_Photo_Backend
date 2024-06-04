@@ -190,10 +190,11 @@ shopRouter.get("/", verifyToken, async (req, res) => {
 shopRouter.get("/:id", verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const data = await prisma.shop.findMany({
+    const data = await prisma.shop.findUnique({
       where: { id },
       select: {
         id: true,
+        sellerId: true,
         sellingPrice: true,
         sellingQuantity: true,
         remainingQuantity: true,
@@ -208,23 +209,20 @@ shopRouter.get("/:id", verifyToken, async (req, res) => {
         }
       }
     });
-
-    const processedData = data.map((v) => {
-      const card = { ...v.card };
-      delete card.user;
-      return {
-        ...card,
-        price: v.sellingPrice,
-        totalQuantity: v.sellingQuantity,
-        remainingQuantity: v.remainingQuantity,
-        seller_nickname: v.card.user.nickname,
-        isOwner: false
-      };
-    });
+    const seller_nickname = data.card.user.nickname;
+    delete data.card.user;
+    const processedData = {
+      ...data.card,
+      price: data.sellingPrice,
+      totalQuantity: data.sellingQuantity,
+      remainingQuantity: data.remainingQuantity,
+      seller_nickname,
+      isOwner: false
+    };
 
     let exchangeCardData;
     //해당 카드 판매자라면 받은 교환제시 조회
-    if (data.sellerId === req.decoded.userId) {
+    if (data.sellerId == req.decoded.userId) {
       processedData.isOwner = true;
 
       exchangeCardData = await prisma.exchange.findMany({
@@ -232,6 +230,7 @@ shopRouter.get("/:id", verifyToken, async (req, res) => {
           targetCardId: id
         },
         select: {
+          id: true,
           requestMessage: true,
           card: {
             select: {
@@ -253,6 +252,7 @@ shopRouter.get("/:id", verifyToken, async (req, res) => {
           requesterId: req.decoded.userId
         },
         select: {
+          id: true,
           requestMessage: true,
           card: {
             select: {
@@ -272,6 +272,7 @@ shopRouter.get("/:id", verifyToken, async (req, res) => {
       const card = { ...v.card };
       delete card.user;
       return {
+        exchangeId: v.id,
         ...card,
         nickname: v.card.user.nickname,
         requestMessage: v.requestMessage

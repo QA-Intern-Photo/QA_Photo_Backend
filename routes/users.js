@@ -78,6 +78,9 @@ userRouter.get("/my-cards", verifyToken, async (req, res) => {
         grade: true,
         genre: true,
         name: true,
+        totalQuantity: true,
+        availableQuantity: true,
+        price: true,
         user: { select: { nickname: true } }
       }
     });
