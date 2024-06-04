@@ -83,15 +83,23 @@ shopRouter.get("/", verifyToken, async (req, res) => {
       order = "high_price",
       grade,
       genre,
-      keyword
+      keyword,
+      isSoldOut
     } = req.body;
+
+    let whereIsSoldOut = { remainingQuantity: { gt: 0 } };
+    if (isSoldOut) {
+      whereIsSoldOut = { remainingQuantity: 0 };
+    }
 
     const data = await prisma.shop.findMany({
       where: {
+        ...whereIsSoldOut,
         card: {
           AND: [
             { grade },
             { genre },
+
             {
               OR: [
                 { name: { contains: keyword } },
@@ -157,6 +165,7 @@ shopRouter.get("/", verifyToken, async (req, res) => {
         price: v.sellingPrice,
         totalQuantity: v.sellingQuantity,
         remainingQuantity: v.remainingQuantity,
+        isSoldOut: Boolean(v.remainingQuantity),
         seller_nickname: v.card.user.nickname
       };
     });
