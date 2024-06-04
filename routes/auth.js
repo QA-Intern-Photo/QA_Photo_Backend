@@ -22,7 +22,7 @@ authRouter.post("/signup", async (req, res) => {
     res.status(201).send({ email, nickname, points, createdAt, updatedAt });
   } catch (e) {
     if (e.code === "P2002")
-      return res.status(409).send({ message: "중복이메일" });
+      return res.status(409).send({ message: "이미 사용중인 이메일입니다." });
     return res.status(500).send({ message: e.message });
   }
 });
