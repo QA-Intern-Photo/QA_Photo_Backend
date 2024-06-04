@@ -35,4 +35,26 @@ exchangeRouter.post("/:id/exchange", verifyToken, async (req, res) => {
   }
 });
 
-exchangeRouter.delete("");
+//교환 취소하기
+exchangeRouter.delete("/:id/exchange", verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.decoded.userId;
+
+    const deletedData = await prisma.exchange.delete({
+      where: { id }
+    });
+
+    //교환 취소했다면 내 카드의 availableQuantity 수정
+    const card = await prisma.card.findUnique({
+      where: { id_ownerId: { id: deletedData.offeredCardId, ownerId: userId } }
+    });
+    await prisma.card.update({
+      where: { id_ownerId: { id: card.id, ownerId: userId } },
+      data: { availableQuantity: card.availableQuantity + 1 }
+    });
+    res.status(201).send(deletedData);
+  } catch (e) {
+    return res.status(500).send({ message: e.message });
+  }
+});
