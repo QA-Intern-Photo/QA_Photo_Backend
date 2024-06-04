@@ -190,7 +190,7 @@ shopRouter.get("/", verifyToken, async (req, res) => {
 shopRouter.get("/:id", verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const data = await prisma.shop.get({
+    const data = await prisma.shop.findMany({
       where: { id },
       select: {
         id: true,
@@ -232,14 +232,16 @@ shopRouter.get("/:id", verifyToken, async (req, res) => {
           targetCardId: id
         },
         select: {
-          requestMessage,
+          requestMessage: true,
           card: {
-            image: true,
-            grade: true,
-            genre: true,
-            name: true,
-            price: true,
-            user: { select: { nickname: true } }
+            select: {
+              image: true,
+              grade: true,
+              genre: true,
+              name: true,
+              price: true,
+              user: { select: { nickname: true } }
+            }
           }
         }
       });
@@ -251,20 +253,22 @@ shopRouter.get("/:id", verifyToken, async (req, res) => {
           requesterId: req.decoded.userId
         },
         select: {
-          requestMessage,
+          requestMessage: true,
           card: {
-            image: true,
-            grade: true,
-            genre: true,
-            name: true,
-            price: true,
-            user: { select: { nickname: true } }
+            select: {
+              image: true,
+              grade: true,
+              genre: true,
+              name: true,
+              price: true,
+              user: { select: { nickname: true } }
+            }
           }
         }
       });
     }
 
-    const processedExchangeData = exchangeCardData.map((v) => {
+    const exchangeRequest = exchangeCardData.map((v) => {
       const card = { ...v.card };
       delete card.user;
       return {
@@ -274,10 +278,13 @@ shopRouter.get("/:id", verifyToken, async (req, res) => {
       };
     });
 
-    res
-      .status(201)
-      .send({ ...processedData, exchangeRequest: processedExchangeData });
-  } catch (e) {}
+    res.status(201).send({
+      ...processedData,
+      exchangeRequest
+    });
+  } catch (e) {
+    return res.status(500).send({ message: e.message });
+  }
 });
 
 //모든 카드 가져오기

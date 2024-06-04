@@ -4,6 +4,7 @@ import { assert } from "superstruct";
 import { PrismaClient } from "@prisma/client";
 import { verifyToken } from "../util/jwt-verify.js";
 import { upload } from "../util/upload-image.js";
+import { getOrderBy, myCardGetOrderBy } from "../util/get-order-by.js";
 const prisma = new PrismaClient();
 export const userRouter = express.Router();
 
@@ -41,6 +42,7 @@ userRouter.post(
 //내 카드 조회
 userRouter.get("/my-cards", verifyToken, async (req, res) => {
   try {
+    const userId = req.decoded.userId;
     const {
       page = 1,
       size = 5,
@@ -63,10 +65,11 @@ userRouter.get("/my-cards", verifyToken, async (req, res) => {
           },
           {
             availableQuantity: { gt: 0 }
-          }
+          },
+          { ownerId: userId }
         ]
       },
-      orderBy: getOrderBy(order),
+      orderBy: myCardGetOrderBy(order),
       skip: (parseInt(page) - 1) * parseInt(size),
       take: parseInt(size),
       select: {
@@ -92,7 +95,8 @@ userRouter.get("/my-cards", verifyToken, async (req, res) => {
           },
           {
             availableQuantity: { gt: 0 }
-          }
+          },
+          { ownerId: userId }
         ]
       }
     });
@@ -121,7 +125,7 @@ userRouter.get("/my-cards", verifyToken, async (req, res) => {
 //내 판매카드 조회
 userRouter.get("/my-cards/sales", verifyToken, async (req, res) => {
   try {
-    const { userId } = req.decoded.userId;
+    const userId = req.decoded.userId;
 
     const {
       page = 1,
@@ -178,6 +182,8 @@ userRouter.get("/my-cards/sales", verifyToken, async (req, res) => {
 
     const totalData = await prisma.shop.findMany({
       where: {
+        ...whereIsSoldOut,
+        sellerId: userId,
         card: {
           AND: [
             { grade },
@@ -202,16 +208,11 @@ userRouter.get("/my-cards/sales", verifyToken, async (req, res) => {
     const hasPrevPage = page > 1;
 
     const processedData = sellingCardData.map((v) => {
-      const card = { ...v.card };
-      delete card.user;
       return {
         id: v.id,
-        ...card,
+        ...v.card,
         price: v.sellingPrice,
-        totalQuantity: v.sellingQuantity,
-        remainingQuantity: v.remainingQuantity,
-        isSoldOut: Boolean(v.remainingQuantity),
-        seller_nickname: v.card.user.nickname
+        quantity: v.remainingQuantity
       };
     });
 
@@ -235,13 +236,96 @@ userRouter.get("/my-cards/sales", verifyToken, async (req, res) => {
 userRouter.get("/my-cards/exchange", verifyToken, async (req, res) => {
   try {
     const userId = req.decoded.userId;
-    const exchangingCardList = await prisma.exchange.findMany({
-      where: { requesterId: userId },
-      select:{
-        
+
+    const {
+      page = 1,
+      size = 5,
+      order = "high_price",
+      grade,
+      genre,
+      keyword
+    } = req.body;
+
+    const exchangingCardData = await prisma.exchange.findMany({
+      where: {
+        requesterId: userId,
+        card: {
+          AND: [
+            { grade },
+            { genre },
+            {
+              OR: [
+                { name: { contains: keyword } },
+                { description: { contains: keyword } }
+              ]
+            }
+          ]
+        }
+      },
+      orderBy: { card: myCardGetOrderBy(order) },
+      skip: (parseInt(page) - 1) * parseInt(size),
+      take: parseInt(size),
+
+      select: {
+        id: true,
+        card: {
+          select: {
+            image: true,
+            grade: true,
+            genre: true,
+            name: true,
+            price: true,
+            user: { select: { nickname: true } }
+          }
+        }
       }
     });
-    res.status(201).send(exchangingCardList);
+
+    const totalData = await prisma.exchange.findMany({
+      where: {
+        requesterId: userId,
+        card: {
+          AND: [
+            { grade },
+            { genre },
+            {
+              OR: [
+                { name: { contains: keyword } },
+                { description: { contains: keyword } }
+              ]
+            }
+          ]
+        }
+      },
+      select: {
+        card: true
+      }
+    });
+
+    const totalCount = totalData.length;
+    const totalPages = Math.ceil(totalCount / size);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
+
+    const processedData = exchangingCardData.map((v) => {
+      return {
+        id: v.id,
+        ...v.card,
+        quantity: 1
+      };
+    });
+
+    res.status(201).send({
+      data: processedData,
+      pagination: {
+        totalCount,
+        totalPages,
+        currentPage: page,
+        pageSize: size,
+        hasNextPage,
+        hasPrevPage
+      }
+    });
   } catch (e) {
     return res.status(500).send({ message: e.message });
   }

@@ -33,6 +33,6 @@ exchangeRouter.post("/:id/exchange", verifyToken, async (req, res) => {
   } catch (e) {
     return res.status(500).send({ message: e.message });
   }
-
-  i;
 });
+
+exchangeRouter.delete("");
