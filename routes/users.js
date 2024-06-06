@@ -144,6 +144,7 @@ userRouter.get("/my-cards/sales", verifyToken, async (req, res) => {
     if (isSoldOut) {
       whereIsSoldOut = { remainingQuantity: 0 };
     }
+    if (!("isSoldOut" in req.body)) whereIsSoldOut = {};
 
     const sellingCardData = await prisma.shop.findMany({
       where: {
