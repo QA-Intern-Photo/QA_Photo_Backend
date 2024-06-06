@@ -53,7 +53,7 @@ exchangeRouter.delete("/:id/exchange", verifyToken, async (req, res) => {
       where: { id_ownerId: { id: card.id, ownerId: userId } },
       data: { availableQuantity: card.availableQuantity + 1 }
     });
-    res.statusCode(204);
+    return res.status(204).send({ message: "삭제 성공" });
   } catch (e) {
     return res.status(500).send({ message: e.message });
   }
