@@ -68,14 +68,30 @@ shopRouter.post("/", verifyToken, async (req, res) => {
 });
 
 //내 판매포토카드 수정
-shopRouter.put("/:id", verifyToken, async (req, res) => {
+shopRouter.put("/:shopId", verifyToken, async (req, res) => {
   try {
-    const { id } = req.params;
+    const { shopId } = req.params;
   } catch (e) {}
 });
 
+//내 판매포토카드 삭제
+shopRouter.delete("/:shopId", verifyToken, async (req, res) => {
+  try {
+    const { shopId } = req.params;
+
+    const shopData = await prisma.shop.delete({
+      where: { id: shopId }
+    });
+
+    console.log(shopData);
+    res.status(201).send({message:"삭제 성공"});
+  } catch (e) {
+    return res.status(500).send({ message: e.message });
+  }
+});
+
 //상점 조회
-shopRouter.get("/", verifyToken, async (req, res) => {
+shopRouter.get("/", async (req, res) => {
   try {
     const {
       page = 1,
