@@ -84,7 +84,7 @@ shopRouter.delete("/:shopId", verifyToken, async (req, res) => {
     });
 
     console.log(shopData);
-    res.status(201).send({message:"삭제 성공"});
+    res.status(201).send({ message: "삭제 성공" });
   } catch (e) {
     return res.status(500).send({ message: e.message });
   }
@@ -181,7 +181,7 @@ shopRouter.get("/", async (req, res) => {
         price: v.sellingPrice,
         totalQuantity: v.sellingQuantity,
         remainingQuantity: v.remainingQuantity,
-        isSoldOut: Boolean(v.remainingQuantity),
+        isSoldOut: !Boolean(v.remainingQuantity),
         seller_nickname: v.card.user.nickname
       };
     });
