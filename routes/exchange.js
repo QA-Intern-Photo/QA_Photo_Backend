@@ -63,7 +63,6 @@ exchangeRouter.delete("/:id/exchange", verifyToken, async (req, res) => {
 exchangeRouter.post("/:id/exchange/refuse", verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.decoded.userId;
     const deletedData = await prisma.exchange.delete({
       where: { id }
     });
@@ -90,7 +89,7 @@ exchangeRouter.post("/:id/exchange/refuse", verifyToken, async (req, res) => {
 exchangeRouter.post("/:id/exchange/accept", verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
-
+    const userId = req.decoded.userId;
     const exchangeCard = await prisma.exchange.findUnique({
       where: { id }
     });
