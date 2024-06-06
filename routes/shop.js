@@ -107,6 +107,7 @@ shopRouter.get("/", async (req, res) => {
     if (isSoldOut) {
       whereIsSoldOut = { remainingQuantity: 0 };
     }
+    if (!("isSoldOut" in req.body)) whereIsSoldOut = {};
 
     const data = await prisma.shop.findMany({
       where: {
