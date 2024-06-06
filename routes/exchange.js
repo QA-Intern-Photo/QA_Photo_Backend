@@ -98,6 +98,9 @@ exchangeRouter.post("/:id/exchange/accept", verifyToken, async (req, res) => {
     const shopCard = await prisma.shop.findUnique({
       where: { id: exchangeCard.targetCardId }
     });
+    if (shopCard.sellerId !== userId) {
+      throw new Error("승인 권한이 없습니다.");
+    }
     await prisma.shop.update({
       where: { id: shopCard.id },
       data: { remainingQuantity: shopCard.remainingQuantity - 1 }
@@ -158,14 +161,18 @@ exchangeRouter.post("/:id/exchange/accept", verifyToken, async (req, res) => {
         },
         data: {
           totalQuantity: sameCard2.totalQuantity + 1,
-          availableQuantity: sameCard2.availableQuantity + 1,
-          price: sameCard.price
+          availableQuantity: sameCard2.availableQuantity + 1
         }
       });
     } else {
       //처음 갖게된 카드라면 새로 추가
-      const cardData = await prisma.card.findFirst({
-        where: { id: exchangeCard.offeredCardId }
+      const cardData = await prisma.card.findUnique({
+        where: {
+          id_ownerId: {
+            id: exchangeCard.offeredCardId,
+            ownerId: exchangeCard.requesterId
+          }
+        }
       });
       await prisma.card.create({
         data: {

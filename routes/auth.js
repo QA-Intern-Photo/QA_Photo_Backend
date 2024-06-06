@@ -9,8 +9,12 @@ const prisma = new PrismaClient();
 
 export const authRouter = express.Router();
 
-authRouter.get("/test", (req, res) => {
-  res.send("test");
+authRouter.get("/test", async (req, res) => {
+  const test = await prisma.shop.findUnique({
+    where: { id: "test" }
+  });
+  if (!test) console.log("exist");
+  res.send(test);
 });
 //회원가입
 authRouter.post("/signup", async (req, res) => {
