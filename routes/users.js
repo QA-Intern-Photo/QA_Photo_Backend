@@ -46,7 +46,7 @@ userRouter.get("/my-cards", verifyToken, async (req, res) => {
     const {
       page = 1,
       size = 5,
-      order = "high_price",
+      order = "newest",
       grade,
       genre,
       keyword

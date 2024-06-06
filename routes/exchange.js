@@ -53,7 +53,7 @@ exchangeRouter.delete("/:id/exchange", verifyToken, async (req, res) => {
       where: { id_ownerId: { id: card.id, ownerId: userId } },
       data: { availableQuantity: card.availableQuantity + 1 }
     });
-    res.status(201).send(deletedData);
+    res.statusCode(204);
   } catch (e) {
     return res.status(500).send({ message: e.message });
   }
