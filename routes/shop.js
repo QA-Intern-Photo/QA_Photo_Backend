@@ -79,12 +79,53 @@ shopRouter.delete("/:shopId", verifyToken, async (req, res) => {
   try {
     const { shopId } = req.params;
 
-    const shopData = await prisma.shop.delete({
+    const shopData = await prisma.shop.findUnique({
       where: { id: shopId }
     });
+    if (shopData.sellerId !== req.decoded.userId)
+      throw new Error("삭제 권한이 없습니다.");
 
-    console.log(shopData);
-    res.status(201).send({ message: "삭제 성공" });
+    //삭제 후 remainingQuantity만큼 원래 카드수량 추가하기
+    const cardData = await prisma.card.findUnique({
+      where: {
+        id_ownerId: { id: shopData.cardId, ownerId: shopData.sellerId }
+      },
+      select: { availableQuantity: true }
+    });
+    await prisma.card.update({
+      where: {
+        id_ownerId: { id: shopData.cardId, ownerId: shopData.sellerId }
+      },
+      data: {
+        availableQuantity:
+          cardData.availableQuantity + shopData.remainingQuantity
+      }
+    });
+
+    //교환 신청 온 카드들 다 거절처리
+    const exchangeData = await prisma.exchange.findMany({
+      where: { targetCardId: shopId }
+    });
+    exchangeData.map(async (v) => {
+      const card = await prisma.card.findUnique({
+        where: {
+          id_ownerId: {
+            id: v.offeredCardId,
+            ownerId: v.requesterId
+          }
+        }
+      });
+      await prisma.card.update({
+        where: { id_ownerId: { id: card.id, ownerId: card.ownerId } },
+        data: { availableQuantity: card.availableQuantity + 1 }
+      });
+    });
+
+    //shop data 먼저 삭제하면 exchange 수량 반영 전에 cascade로 삭제되므로 마지막에 삭제
+    await prisma.shop.delete({
+      where: { id: shopId }
+    });
+    res.status(204).send({ message: "삭제 성공" });
   } catch (e) {
     return res.status(500).send({ message: e.message });
   }
@@ -300,16 +341,6 @@ shopRouter.get("/:id", verifyToken, async (req, res) => {
       ...processedData,
       exchangeRequest
     });
-  } catch (e) {
-    return res.status(500).send({ message: e.message });
-  }
-});
-
-//모든 카드 가져오기
-shopRouter.get("/test", async (req, res) => {
-  try {
-    const data = await prisma.card.findMany({});
-    res.status(201).send(data);
   } catch (e) {
     return res.status(500).send({ message: e.message });
   }
