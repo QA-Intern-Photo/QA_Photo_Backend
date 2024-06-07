@@ -71,7 +71,50 @@ shopRouter.post("/", verifyToken, async (req, res) => {
 shopRouter.put("/:shopId", verifyToken, async (req, res) => {
   try {
     const { shopId } = req.params;
-  } catch (e) {}
+    const userId = req.decoded.userId;
+    const body = { ...req.body };
+
+    const shopData = await prisma.shop.findUnique({
+      where: { id: shopId }
+    });
+
+    if (shopData.sellerId !== userId) throw new Error("수정 권한이 없습니다.");
+
+    if (req.body.sellingQuantity === shopData.remainingQuantity) {
+      delete body.sellingQuantity;
+    } else {
+      const cardData = await prisma.card.findUnique({
+        where: {
+          id_ownerId: { id: shopData.cardId, ownerId: userId }
+        }
+      });
+
+      await prisma.card.update({
+        where: {
+          id_ownerId: { id: shopData.cardId, ownerId: userId }
+        },
+        data: {
+          availableQuantity:
+            cardData.availableQuantity +
+            (shopData.remainingQuantity - req.body.sellingQuantity)
+        }
+      });
+
+      body.sellingQuantity =
+        shopData.sellingQuantity +
+        (req.body.sellingQuantity - shopData.remainingQuantity);
+      body.remainingQuantity = req.body.sellingQuantity;
+    }
+    const newShopData = await prisma.shop.update({
+      where: { id: shopId },
+      data: {
+        ...body
+      }
+    });
+    res.status(201).send(newShopData);
+  } catch (e) {
+    return res.status(500).send({ message: e.message });
+  }
 });
 
 //내 판매포토카드 삭제
@@ -262,14 +305,18 @@ shopRouter.get("/:id", verifyToken, async (req, res) => {
             grade: true,
             genre: true,
             name: true,
+            availableQuantity: true,
             user: { select: { nickname: true } }
           }
         }
       }
     });
     const seller_nickname = data.card.user.nickname;
+    const availableQuantity = data.card.availableQuantity;
     delete data.card.user;
+    delete data.card.availableQuantity;
     const processedData = {
+      id,
       ...data.card,
       price: data.sellingPrice,
       totalQuantity: data.sellingQuantity,
@@ -282,6 +329,9 @@ shopRouter.get("/:id", verifyToken, async (req, res) => {
     //해당 카드 판매자라면 받은 교환제시 조회
     if (data.sellerId == req.decoded.userId) {
       processedData.isOwner = true;
+      //maxSellingQuantity데이터 추가
+      processedData.maxSellingQuantity =
+        availableQuantity + data.remainingQuantity;
 
       exchangeCardData = await prisma.exchange.findMany({
         where: {
