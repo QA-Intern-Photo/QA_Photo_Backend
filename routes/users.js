@@ -133,7 +133,7 @@ userRouter.get("/my-cards/sales", verifyToken, async (req, res) => {
     const {
       page = 1,
       size = 5,
-      order = "high_price",
+      order = "newest",
       grade,
       genre,
       keyword,
@@ -244,7 +244,7 @@ userRouter.get("/my-cards/exchange", verifyToken, async (req, res) => {
     const {
       page = 1,
       size = 5,
-      order = "high_price",
+      order = "newest",
       grade,
       genre,
       keyword
