@@ -272,6 +272,7 @@ userRouter.get("/my-cards/exchange", verifyToken, async (req, res) => {
 
       select: {
         id: true,
+        targetCardId: true,
         card: {
           select: {
             image: true,
@@ -314,6 +315,7 @@ userRouter.get("/my-cards/exchange", verifyToken, async (req, res) => {
     const processedData = exchangingCardData.map((v) => {
       return {
         id: v.id,
+        shopId: v.targetCardId,
         ...v.card,
         quantity: 1
       };
