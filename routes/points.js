@@ -14,23 +14,29 @@ pointRouter.get("/box", verifyToken, async (req, res) => {
     select: { points: true, lastDrawTime: true }
   });
 
-  const currentTime = BigInt(Date.now());
+  const currentTime = new Date();
+  const userLastDrawTime = new Date(userData.lastDrawTime);
   if (
     !userData.lastDrawTime ||
-    currentTime - userData.lastDrawTime >= 60 * 60 * 1000
+    Date.parse(currentTime) - Date.parse(userLastDrawTime) >= 60 * 60 * 1000
   ) {
     const randomPoints = Math.floor(Math.random() * 10) + 1;
 
     await prisma.user.update({
       where: { id: userId },
       data: {
-        points: userData.points + randomPoints,
-        lastDrawTime: currentTime
+        points: userData.points + randomPoints
       }
     });
 
-    res.status(201).send({ success: true, randomPoints });
+    res.status(201).send({
+      success: true,
+      randomPoints,
+      lastDrawTime: currentTime.toISOString()
+    });
   } else {
-    res.status(201).send({ success: false });
+    res
+      .status(201)
+      .send({ success: false, lastDrawTime: userData.lastDrawTime });
   }
 });
