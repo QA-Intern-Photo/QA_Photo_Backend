@@ -366,6 +366,7 @@ shopRouter.get("/:id", verifyToken, async (req, res) => {
             grade: true,
             genre: true,
             name: true,
+            description: true,
             availableQuantity: true,
             user: { select: { nickname: true } }
           }
