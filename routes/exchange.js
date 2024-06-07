@@ -90,6 +90,7 @@ exchangeRouter.post("/:id/exchange/accept", verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.decoded.userId;
+
     const exchangeCard = await prisma.exchange.findUnique({
       where: { id }
     });
@@ -100,6 +101,9 @@ exchangeRouter.post("/:id/exchange/accept", verifyToken, async (req, res) => {
     });
     if (shopCard.sellerId !== userId) {
       throw new Error("승인 권한이 없습니다.");
+    }
+    if (shopCard.remainingQuantity < 0) {
+      throw new Error("해당 카드는 매진되었습니다.");
     }
     await prisma.shop.update({
       where: { id: shopCard.id },
@@ -131,6 +135,7 @@ exchangeRouter.post("/:id/exchange/accept", verifyToken, async (req, res) => {
       });
       await prisma.card.create({
         data: {
+          id: shopCard.cardId,
           ownerId: exchangeCard.requesterId,
           totalQuantity: 1,
           availableQuantity: 1,
@@ -153,6 +158,7 @@ exchangeRouter.post("/:id/exchange/accept", verifyToken, async (req, res) => {
         }
       }
     });
+
     //만약 이미 갖고 있던 카드라면 수량을 업데이트
     if (sameCard2) {
       await prisma.card.update({
@@ -176,6 +182,7 @@ exchangeRouter.post("/:id/exchange/accept", verifyToken, async (req, res) => {
       });
       await prisma.card.create({
         data: {
+          id: exchangeCard.offeredCardId,
           ownerId: userId,
           totalQuantity: 1,
           availableQuantity: 1,

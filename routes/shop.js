@@ -8,16 +8,77 @@ const prisma = new PrismaClient();
 export const shopRouter = express.Router();
 
 //포토카드 구매하기
-shopRouter.get(`:id/purchase`, verifyToken, async (req, res) => {
+shopRouter.post("/:shopId/purchase", verifyToken, async (req, res) => {
   try {
-    const { id } = req.params;
-    const { email, nickname, points, createdAt, updatedAt } =
-      await prisma.shop.findUnique({
-        where: { id }
+    const { shopId } = req.params;
+    const { purchaseQuantity } = req.body;
+    const userId = req.decoded.userId;
+
+    const shopData = await prisma.shop.findUnique({
+      where: { id: shopId }
+    });
+
+    const userData = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { points: true }
+    });
+
+    if (userData.points - shopData.sellingPrice * purchaseQuantity < 0)
+      throw new Error("포인트가 부족합니다.");
+
+    //구매후 유저의 포인트 감소
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        points: userData.points - shopData.sellingPrice * purchaseQuantity
+      }
+    });
+
+    //구매자에게 해당 카드 추가
+    let purchaseCardData;
+    const sameCard = await prisma.card.findUnique({
+      where: {
+        id_ownerId: { id: shopData.cardId, ownerId: userId }
+      }
+    });
+    //만약 이미 갖고 있던 카드라면 수량을 업데이트
+    if (sameCard) {
+      purchaseCardData = await prisma.card.update({
+        where: {
+          id_ownerId: { id: shopData.cardId, ownerId: userId }
+        },
+        data: {
+          totalQuantity: sameCard.totalQuantity + purchaseQuantity,
+          availableQuantity: sameCard.availableQuantity + purchaseQuantity,
+          price: shopData.sellingPrice
+        }
       });
-    return res
-      .status(201)
-      .send({ email, nickname, points, createdAt, updatedAt });
+    } else {
+      //처음 갖게된 카드라면 새로 추가
+      const cardData = await prisma.card.findFirst({
+        where: { id: shopData.cardId }
+      });
+      purchaseCardData = await prisma.card.create({
+        data: {
+          id: shopData.cardId,
+          ownerId: userId,
+          totalQuantity: purchaseQuantity,
+          availableQuantity: purchaseQuantity,
+          image: cardData.image,
+          name: cardData.name,
+          grade: cardData.grade,
+          genre: cardData.genre,
+          description: cardData.description,
+          price: shopData.sellingPrice
+        }
+      });
+    }
+
+    await prisma.shop.update({
+      where: { id: shopId },
+      data: { remainingQuantity: shopData.remainingQuantity - purchaseQuantity }
+    });
+    return res.status(201).send(purchaseCardData);
   } catch (e) {
     return res.status(500).send({ message: e.message });
   }
@@ -71,7 +132,50 @@ shopRouter.post("/", verifyToken, async (req, res) => {
 shopRouter.put("/:shopId", verifyToken, async (req, res) => {
   try {
     const { shopId } = req.params;
-  } catch (e) {}
+    const userId = req.decoded.userId;
+    const body = { ...req.body };
+
+    const shopData = await prisma.shop.findUnique({
+      where: { id: shopId }
+    });
+
+    if (shopData.sellerId !== userId) throw new Error("수정 권한이 없습니다.");
+
+    if (req.body.sellingQuantity === shopData.remainingQuantity) {
+      delete body.sellingQuantity;
+    } else {
+      const cardData = await prisma.card.findUnique({
+        where: {
+          id_ownerId: { id: shopData.cardId, ownerId: userId }
+        }
+      });
+
+      await prisma.card.update({
+        where: {
+          id_ownerId: { id: shopData.cardId, ownerId: userId }
+        },
+        data: {
+          availableQuantity:
+            cardData.availableQuantity +
+            (shopData.remainingQuantity - req.body.sellingQuantity)
+        }
+      });
+
+      body.sellingQuantity =
+        shopData.sellingQuantity +
+        (req.body.sellingQuantity - shopData.remainingQuantity);
+      body.remainingQuantity = req.body.sellingQuantity;
+    }
+    const newShopData = await prisma.shop.update({
+      where: { id: shopId },
+      data: {
+        ...body
+      }
+    });
+    res.status(201).send(newShopData);
+  } catch (e) {
+    return res.status(500).send({ message: e.message });
+  }
 });
 
 //내 판매포토카드 삭제
@@ -79,12 +183,53 @@ shopRouter.delete("/:shopId", verifyToken, async (req, res) => {
   try {
     const { shopId } = req.params;
 
-    const shopData = await prisma.shop.delete({
+    const shopData = await prisma.shop.findUnique({
       where: { id: shopId }
     });
+    if (shopData.sellerId !== req.decoded.userId)
+      throw new Error("삭제 권한이 없습니다.");
 
-    console.log(shopData);
-    res.status(201).send({ message: "삭제 성공" });
+    //삭제 후 remainingQuantity만큼 원래 카드수량 추가하기
+    const cardData = await prisma.card.findUnique({
+      where: {
+        id_ownerId: { id: shopData.cardId, ownerId: shopData.sellerId }
+      },
+      select: { availableQuantity: true }
+    });
+    await prisma.card.update({
+      where: {
+        id_ownerId: { id: shopData.cardId, ownerId: shopData.sellerId }
+      },
+      data: {
+        availableQuantity:
+          cardData.availableQuantity + shopData.remainingQuantity
+      }
+    });
+
+    //교환 신청 온 카드들 다 거절처리
+    const exchangeData = await prisma.exchange.findMany({
+      where: { targetCardId: shopId }
+    });
+    exchangeData.map(async (v) => {
+      const card = await prisma.card.findUnique({
+        where: {
+          id_ownerId: {
+            id: v.offeredCardId,
+            ownerId: v.requesterId
+          }
+        }
+      });
+      await prisma.card.update({
+        where: { id_ownerId: { id: card.id, ownerId: card.ownerId } },
+        data: { availableQuantity: card.availableQuantity + 1 }
+      });
+    });
+
+    //shop data 먼저 삭제하면 exchange 수량 반영 전에 cascade로 삭제되므로 마지막에 삭제
+    await prisma.shop.delete({
+      where: { id: shopId }
+    });
+    res.status(204).send({ message: "삭제 성공" });
   } catch (e) {
     return res.status(500).send({ message: e.message });
   }
@@ -96,7 +241,7 @@ shopRouter.get("/", async (req, res) => {
     const {
       page = 1,
       size = 5,
-      order = "high_price",
+      order = "newest",
       grade,
       genre,
       keyword,
@@ -221,14 +366,18 @@ shopRouter.get("/:id", verifyToken, async (req, res) => {
             grade: true,
             genre: true,
             name: true,
+            availableQuantity: true,
             user: { select: { nickname: true } }
           }
         }
       }
     });
     const seller_nickname = data.card.user.nickname;
+    const availableQuantity = data.card.availableQuantity;
     delete data.card.user;
+    delete data.card.availableQuantity;
     const processedData = {
+      id,
       ...data.card,
       price: data.sellingPrice,
       totalQuantity: data.sellingQuantity,
@@ -241,6 +390,9 @@ shopRouter.get("/:id", verifyToken, async (req, res) => {
     //해당 카드 판매자라면 받은 교환제시 조회
     if (data.sellerId == req.decoded.userId) {
       processedData.isOwner = true;
+      //maxSellingQuantity데이터 추가
+      processedData.maxSellingQuantity =
+        availableQuantity + data.remainingQuantity;
 
       exchangeCardData = await prisma.exchange.findMany({
         where: {
@@ -300,16 +452,6 @@ shopRouter.get("/:id", verifyToken, async (req, res) => {
       ...processedData,
       exchangeRequest
     });
-  } catch (e) {
-    return res.status(500).send({ message: e.message });
-  }
-});
-
-//모든 카드 가져오기
-shopRouter.get("/test", async (req, res) => {
-  try {
-    const data = await prisma.card.findMany({});
-    res.status(201).send(data);
   } catch (e) {
     return res.status(500).send({ message: e.message });
   }
