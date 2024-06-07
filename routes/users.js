@@ -339,7 +339,8 @@ userRouter.get("/my-cards/exchange", verifyToken, async (req, res) => {
 userRouter.get("/profile", verifyToken, async (req, res) => {
   try {
     const userData = await prisma.user.findUnique({
-      where: { id: req.decoded.userId }
+      where: { id: req.decoded.userId },
+      select: { id: true, email: true, nickname: true, points: true }
     });
 
     const cardCountData = await prisma.card.groupBy({

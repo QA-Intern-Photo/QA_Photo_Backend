@@ -28,21 +28,16 @@ enum Grade {
   LEGENDARY
 }
 
-enum CardStatus {
-  SALE
-  NOT_FOR_SALE
-}
-
 model User {
   id           String         @id @default(uuid())
   email        String         @unique
   nickname     String
   password     String
   points       Int            @default(0)
+  lastDrawTime BigInt?
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
   Notification Notification[]
-  Purchase     Purchase[]
   Card         Card[]
 }
 
@@ -51,13 +46,6 @@ model Notification {
   user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId  String
   content String
-}
-
-model Purchase {
-  id      String @id @default(uuid())
-  user    User   @relation(fields: [buyerId], references: [id])
-  buyerId String
-  cardId  String @default(uuid())
 }
 
 model Card {
