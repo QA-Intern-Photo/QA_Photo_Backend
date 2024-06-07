@@ -8,16 +8,77 @@ const prisma = new PrismaClient();
 export const shopRouter = express.Router();
 
 //포토카드 구매하기
-shopRouter.get(`:id/purchase`, verifyToken, async (req, res) => {
+shopRouter.post("/:shopId/purchase", verifyToken, async (req, res) => {
   try {
-    const { id } = req.params;
-    const { email, nickname, points, createdAt, updatedAt } =
-      await prisma.shop.findUnique({
-        where: { id }
+    const { shopId } = req.params;
+    const { purchaseQuantity } = req.body;
+    const userId = req.decoded.userId;
+
+    const shopData = await prisma.shop.findUnique({
+      where: { id: shopId }
+    });
+
+    const userData = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { points: true }
+    });
+
+    if (userData.points - shopData.sellingPrice * purchaseQuantity < 0)
+      throw new Error("포인트가 부족합니다.");
+
+    //구매후 유저의 포인트 감소
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        points: userData.points - shopData.sellingPrice * purchaseQuantity
+      }
+    });
+
+    //구매자에게 해당 카드 추가
+    let purchaseCardData;
+    const sameCard = await prisma.card.findUnique({
+      where: {
+        id_ownerId: { id: shopData.cardId, ownerId: userId }
+      }
+    });
+    //만약 이미 갖고 있던 카드라면 수량을 업데이트
+    if (sameCard) {
+      purchaseCardData = await prisma.card.update({
+        where: {
+          id_ownerId: { id: shopData.cardId, ownerId: userId }
+        },
+        data: {
+          totalQuantity: sameCard.totalQuantity + purchaseQuantity,
+          availableQuantity: sameCard.availableQuantity + purchaseQuantity,
+          price: shopData.sellingPrice
+        }
       });
-    return res
-      .status(201)
-      .send({ email, nickname, points, createdAt, updatedAt });
+    } else {
+      //처음 갖게된 카드라면 새로 추가
+      const cardData = await prisma.card.findFirst({
+        where: { id: shopData.cardId }
+      });
+      purchaseCardData = await prisma.card.create({
+        data: {
+          id: shopData.cardId,
+          ownerId: userId,
+          totalQuantity: purchaseQuantity,
+          availableQuantity: purchaseQuantity,
+          image: cardData.image,
+          name: cardData.name,
+          grade: cardData.grade,
+          genre: cardData.genre,
+          description: cardData.description,
+          price: shopData.sellingPrice
+        }
+      });
+    }
+
+    await prisma.shop.update({
+      where: { id: shopId },
+      data: { remainingQuantity: shopData.remainingQuantity - purchaseQuantity }
+    });
+    return res.status(201).send(purchaseCardData);
   } catch (e) {
     return res.status(500).send({ message: e.message });
   }
