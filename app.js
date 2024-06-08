@@ -11,6 +11,7 @@ import path from "path";
 import { shopRouter } from "./routes/shop.js";
 import { exchangeRouter } from "./routes/exchange.js";
 import { pointRouter } from "./routes/points.js";
+import { notificationRouter } from "./routes/notifications.js";
 
 const corsOptions = {
   origin: ["http://localhost:3000"]
@@ -34,6 +35,7 @@ app.use("/api/users", userRouter);
 app.use("/api/shop/cards", shopRouter);
 app.use("/api/cards", exchangeRouter);
 app.use("/api/points", pointRouter);
+app.use("/api/notifications", notificationRouter);
 function asyncHandler(handler) {
   return async function (req, res) {
     try {
