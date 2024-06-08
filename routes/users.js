@@ -114,8 +114,8 @@ userRouter.get("/my-cards", verifyToken, async (req, res) => {
       pagination: {
         totalCount,
         totalPages,
-        currentPage: page,
-        pageSize: size,
+        currentPage: Number(page),
+        pageSize: Number(size),
         hasNextPage,
         hasPrevPage
       }
@@ -225,8 +225,8 @@ userRouter.get("/my-cards/sales", verifyToken, async (req, res) => {
       pagination: {
         totalCount,
         totalPages,
-        currentPage: page,
-        pageSize: size,
+        currentPage: Number(page),
+        pageSize: Number(size),
         hasNextPage,
         hasPrevPage
       }
@@ -326,8 +326,8 @@ userRouter.get("/my-cards/exchange", verifyToken, async (req, res) => {
       pagination: {
         totalCount,
         totalPages,
-        currentPage: page,
-        pageSize: size,
+        currentPage: Number(page),
+        pageSize: Number(size),
         hasNextPage,
         hasPrevPage
       }

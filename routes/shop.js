@@ -337,8 +337,8 @@ shopRouter.get("/", async (req, res) => {
       pagination: {
         totalCount,
         totalPages,
-        currentPage: page,
-        pageSize: size,
+        currentPage: Number(page),
+        pageSize: Number(size),
         hasNextPage,
         hasPrevPage
       }
