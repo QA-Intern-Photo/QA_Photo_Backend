@@ -50,7 +50,7 @@ userRouter.get("/my-cards", verifyToken, async (req, res) => {
       grade,
       genre,
       keyword
-    } = req.body;
+    } = req.query;
 
     const data = await prisma.card.findMany({
       where: {
@@ -138,7 +138,7 @@ userRouter.get("/my-cards/sales", verifyToken, async (req, res) => {
       genre,
       keyword,
       isSoldOut
-    } = req.body;
+    } = req.query;
 
     let whereIsSoldOut = { remainingQuantity: { gt: 0 } };
     if (isSoldOut) {
@@ -248,7 +248,7 @@ userRouter.get("/my-cards/exchange", verifyToken, async (req, res) => {
       grade,
       genre,
       keyword
-    } = req.body;
+    } = req.query;
 
     const exchangingCardData = await prisma.exchange.findMany({
       where: {

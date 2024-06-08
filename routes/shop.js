@@ -246,7 +246,7 @@ shopRouter.get("/", async (req, res) => {
       genre,
       keyword,
       isSoldOut
-    } = req.body;
+    } = req.query;
 
     let whereIsSoldOut = { remainingQuantity: { gt: 0 } };
     if (isSoldOut) {
