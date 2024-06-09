@@ -29,6 +29,30 @@ exchangeRouter.post("/:id/exchange", verifyToken, async (req, res) => {
       where: { id_ownerId: { id: offeredCardId, ownerId: userId } },
       data: { availableQuantity: card.availableQuantity - 1 }
     });
+
+    //제안 알림보내기
+    const userData = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { nickname: true }
+    });
+    const shopData = await prisma.shop.findUnique({
+      where: { id },
+      select: {
+        sellerId: true,
+        card: {
+          select: {
+            grade: true,
+            name: true
+          }
+        }
+      }
+    });
+    await prisma.notification.create({
+      data: {
+        userId: shopData.sellerId,
+        content: `${userData.nickname}님이 [${shopData.card.grade}|${shopData.card.name}]의 포토카드 교환을 제안했습니다.`
+      }
+    });
     res.status(201).send(exchangeData);
   } catch (e) {
     return res.status(500).send({ message: e.message });
