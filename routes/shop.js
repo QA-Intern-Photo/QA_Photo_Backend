@@ -20,7 +20,7 @@ shopRouter.post("/:shopId/purchase", verifyToken, async (req, res) => {
 
     const userData = await prisma.user.findUnique({
       where: { id: userId },
-      select: { points: true }
+      select: { points: true, nickname: true }
     });
 
     if (userData.points - shopData.sellingPrice * purchaseQuantity < 0)
@@ -78,6 +78,31 @@ shopRouter.post("/:shopId/purchase", verifyToken, async (req, res) => {
       where: { id: shopId },
       data: { remainingQuantity: shopData.remainingQuantity - purchaseQuantity }
     });
+
+    //구매 성공 알림 보내기
+    await prisma.notification.create({
+      data: {
+        userId,
+        content: `[${purchaseCardData.grade}|${purchaseCardData.name}]${purchaseQuantity}장을 성공적으로 구매했습니다.`
+      }
+    });
+
+    //판매 알림 보내기
+    await prisma.notification.create({
+      data: {
+        userId: shopData.sellerId,
+        content: `${userData.nickname}님이 [${purchaseCardData.grade}|${purchaseCardData.name}]을(를) ${purchaseQuantity}장 구매했습니다.`
+      }
+    });
+
+    //품절이라면 품절알람 보내기
+    if (shopData.remainingQuantity - purchaseQuantity === 0)
+      await prisma.notification.create({
+        data: {
+          userId: shopData.sellerId,
+          content: `[${purchaseCardData.grade}|${purchaseCardData.name}]이(가) 품절되었습니다.`
+        }
+      });
     return res.status(201).send(purchaseCardData);
   } catch (e) {
     return res.status(500).send({ message: e.message });

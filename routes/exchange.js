@@ -29,6 +29,30 @@ exchangeRouter.post("/:id/exchange", verifyToken, async (req, res) => {
       where: { id_ownerId: { id: offeredCardId, ownerId: userId } },
       data: { availableQuantity: card.availableQuantity - 1 }
     });
+
+    //제안 알림보내기
+    const userData = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { nickname: true }
+    });
+    const shopData = await prisma.shop.findUnique({
+      where: { id },
+      select: {
+        sellerId: true,
+        card: {
+          select: {
+            grade: true,
+            name: true
+          }
+        }
+      }
+    });
+    await prisma.notification.create({
+      data: {
+        userId: shopData.sellerId,
+        content: `${userData.nickname}님이 [${shopData.card.grade}|${shopData.card.name}]의 포토카드 교환을 제안했습니다.`
+      }
+    });
     res.status(201).send(exchangeData);
   } catch (e) {
     return res.status(500).send({ message: e.message });
@@ -78,6 +102,27 @@ exchangeRouter.post("/:id/exchange/refuse", verifyToken, async (req, res) => {
     await prisma.card.update({
       where: { id_ownerId: { id: card.id, ownerId: card.ownerId } },
       data: { availableQuantity: card.availableQuantity + 1 }
+    });
+
+    //교환 거절 알림 보내기
+    const shopData = await prisma.shop.findUnique({
+      where: { id: deletedData.targetCardId },
+      select: {
+        cardId: true,
+        card: {
+          select: {
+            grade: true,
+            name: true,
+            user: { select: { nickname: true } }
+          }
+        }
+      }
+    });
+    await prisma.notification.create({
+      data: {
+        userId: deletedData.requesterId,
+        content: `${shopData.card.user.nickname}님과의 [${shopData.card.grade}|${shopData.card.name}]의 표토카드 교환이 불발되었습니다.`
+      }
     });
     res.status(201).send(deletedData);
   } catch (e) {
@@ -197,6 +242,28 @@ exchangeRouter.post("/:id/exchange/accept", verifyToken, async (req, res) => {
     }
     //모든 교환이 성공적으로 이뤄졌다면 exchange 데이터베이스에서 삭제
     await prisma.exchange.delete({ where: { id } });
+
+    //교환 승인 알림 보내기
+    const shopData = await prisma.shop.findUnique({
+      where: { id: exchangeCard.targetCardId },
+      select: {
+        cardId: true,
+        card: {
+          select: {
+            grade: true,
+            name: true,
+            user: { select: { nickname: true } }
+          }
+        }
+      }
+    });
+    await prisma.notification.create({
+      data: {
+        userId: exchangeCard.requesterId,
+        content: `${shopData.card.user.nickname}님과의 [${shopData.card.grade}|${shopData.card.name}]의 표토카드 교환이 성사되었습니다.`
+      }
+    });
+
     res.status(201).send({ message: "교환 성공" });
   } catch (e) {
     return res.status(500).send({ message: e.message });

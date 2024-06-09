@@ -28,6 +28,11 @@ enum Grade {
   LEGENDARY
 }
 
+enum NotificationStatus {
+  READ
+  NOT_READ
+}
+
 model User {
   id           String         @id @default(uuid())
   email        String         @unique
@@ -42,10 +47,12 @@ model User {
 }
 
 model Notification {
-  id      String @id @default(uuid())
-  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId  String
-  content String
+  id        String             @id @default(uuid())
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  content   String
+  createdAt DateTime           @default(now())
+  status    NotificationStatus @default(NOT_READ)
 }
 
 model Card {
