@@ -36,7 +36,7 @@ enum NotificationStatus {
 model User {
   id           String         @id @default(uuid())
   email        String         @unique
-  nickname     String
+  nickname     String         @unique
   password     String
   points       Int            @default(0)
   lastDrawTime DateTime?      @updatedAt
