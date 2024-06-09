@@ -46,7 +46,7 @@ notificationRouter.get("/", verifyToken, async (req, res) => {
       data: { status: "READ" }
     });
 
-    return res.status(201).send({
+    return res.status(200).send({
       data: processedData,
       pagination: {
         totalCount,

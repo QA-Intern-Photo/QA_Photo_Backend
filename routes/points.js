@@ -29,14 +29,14 @@ pointRouter.get("/box", verifyToken, async (req, res) => {
       }
     });
 
-    res.status(201).send({
+    res.status(200).send({
       success: true,
       randomPoints,
       lastDrawTime: currentTime.toISOString()
     });
   } else {
     res
-      .status(201)
+      .status(200)
       .send({ success: false, lastDrawTime: userData.lastDrawTime });
   }
 });

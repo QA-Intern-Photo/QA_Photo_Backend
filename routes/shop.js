@@ -197,7 +197,7 @@ shopRouter.put("/:shopId", verifyToken, async (req, res) => {
         ...body
       }
     });
-    res.status(201).send(newShopData);
+    res.status(200).send(newShopData);
   } catch (e) {
     return res.status(500).send({ message: e.message });
   }
@@ -357,7 +357,7 @@ shopRouter.get("/", async (req, res) => {
       };
     });
 
-    res.status(201).send({
+    res.status(200).send({
       data: processedData,
       pagination: {
         totalCount,
@@ -474,7 +474,7 @@ shopRouter.get("/:id", verifyToken, async (req, res) => {
       };
     });
 
-    res.status(201).send({
+    res.status(200).send({
       ...processedData,
       exchangeRequest
     });

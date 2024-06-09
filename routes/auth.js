@@ -1,21 +1,14 @@
+import { PrismaClient } from "@prisma/client";
 import express from "express";
-import { CreateUser, LoginUser } from "../structs.js";
-import { assert } from "superstruct";
 import jwt from "jsonwebtoken";
-import { PrismaClient, Prisma } from "@prisma/client";
+import { assert } from "superstruct";
+import { CreateUser, LoginUser } from "../structs.js";
 import { verifyRefreshToken, verifyToken } from "../util/jwt-verify.js";
 
 const prisma = new PrismaClient();
 
 export const authRouter = express.Router();
 
-authRouter.get("/test", async (req, res) => {
-  const test = await prisma.shop.findUnique({
-    where: { id: "test" }
-  });
-  if (!test) console.log("exist");
-  res.send(test);
-});
 //회원가입
 authRouter.post("/signup", async (req, res) => {
   try {
@@ -78,17 +71,22 @@ authRouter.post("/logout", verifyToken, async (req, res) => {
 });
 
 //토큰 갱신
-authRouter.post("/refresh", verifyRefreshToken, async (req, res) => {
-  try {
-    const newAccessToken = jwt.sign(
-      { userId: req.decoded.userId },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "1d"
-      }
-    );
-    return res.send({ newAccessToken });
-  } catch (e) {
-    return res.status(500).send({ message: e.message });
+authRouter.post(
+  "/refresh",
+  verifyToken,
+  verifyRefreshToken,
+  async (req, res) => {
+    try {
+      const newAccessToken = jwt.sign(
+        { userId: req.decoded.userId },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: "1d"
+        }
+      );
+      return res.send({ newAccessToken });
+    } catch (e) {
+      return res.status(500).send({ message: e.message });
+    }
   }
-});
+);

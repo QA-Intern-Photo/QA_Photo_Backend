@@ -109,7 +109,7 @@ userRouter.get("/my-cards", verifyToken, async (req, res) => {
     const hasNextPage = page < totalPages;
     const hasPrevPage = page > 1;
 
-    res.status(201).send({
+    res.status(200).send({
       data,
       pagination: {
         totalCount,
@@ -220,7 +220,7 @@ userRouter.get("/my-cards/sales", verifyToken, async (req, res) => {
       };
     });
 
-    res.status(201).send({
+    res.status(200).send({
       data: processedData,
       pagination: {
         totalCount,
@@ -321,7 +321,7 @@ userRouter.get("/my-cards/exchange", verifyToken, async (req, res) => {
       };
     });
 
-    res.status(201).send({
+    res.status(200).send({
       data: processedData,
       pagination: {
         totalCount,
@@ -371,7 +371,7 @@ userRouter.get("/profile", verifyToken, async (req, res) => {
 
     delete userData.password;
 
-    return res.status(201).send({ ...userData, cardCount });
+    return res.status(200).send({ ...userData, cardCount });
   } catch (e) {
     return res.status(500).send({ message: e.message });
   }
