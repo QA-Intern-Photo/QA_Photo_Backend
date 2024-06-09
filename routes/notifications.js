@@ -14,7 +14,8 @@ notificationRouter.get("/", verifyToken, async (req, res) => {
     const data = await prisma.notification.findMany({
       where: { userId },
       skip: (parseInt(page) - 1) * parseInt(size),
-      take: parseInt(size)
+      take: parseInt(size),
+      orderBy: { createdAt: "desc" }
     });
 
     const totalData = await prisma.user.findMany({
