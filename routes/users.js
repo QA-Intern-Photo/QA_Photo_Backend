@@ -376,3 +376,25 @@ userRouter.get("/profile", verifyToken, async (req, res) => {
     return res.status(500).send({ message: e.message });
   }
 });
+
+userRouter.get("/check-email", async (req, res) => {
+  try {
+    const { email } = req.query;
+    const data = await prisma.user.findUnique({ where: { email } });
+    if (data) return res.status(409).send({ message: "중복 이메일" });
+    return res.status(200).send({ message: "사용가능한 이메일" });
+  } catch (e) {
+    return res.status(500).send({ message: e.message });
+  }
+});
+
+userRouter.get("/check-nickname", async (req, res) => {
+  try {
+    const { nickname } = req.query;
+    const data = await prisma.user.findUnique({ where: { nickname } });
+    if (data) return res.status(409).send({ message: "중복 닉네임" });
+    return res.status(200).send({ message: "사용가능한 닉네임" });
+  } catch (e) {
+    return res.status(500).send({ message: e.message });
+  }
+});
