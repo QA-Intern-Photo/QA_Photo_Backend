@@ -14,8 +14,10 @@ authRouter.post("/signup", async (req, res) => {
   try {
     assert(req.body, CreateUser);
     // req.body.password = "diff";
-    const { email, nickname, points, createdAt, updatedAt } =
+    const { id, email, nickname, points, createdAt, updatedAt } =
       await prisma.user.create({ data: req.body });
+
+    await prisma.token.create({ data: { userId: id } });
     res.status(201).send({ email, nickname, points, createdAt, updatedAt });
   } catch (e) {
     if (e.code === "P2002")
@@ -51,6 +53,15 @@ authRouter.post("/login", async (req, res) => {
         }
       );
 
+      //토큰 저장
+      await prisma.token.update({
+        where: { userId: user.id },
+        data: {
+          accessToken,
+          refreshToken
+        }
+      });
+
       return res.send({
         accessToken,
         refreshToken
@@ -67,6 +78,15 @@ authRouter.post("/login", async (req, res) => {
 
 //로그아웃
 authRouter.post("/logout", verifyToken, async (req, res) => {
+  const userId = req.decoded.userId;
+
+  await prisma.token.update({
+    where: { userId },
+    data: {
+      accessToken: null,
+      refreshToken: null
+    }
+  });
   res.send({ status: 200, message: "로그아웃 성공" });
 });
 
@@ -84,6 +104,13 @@ authRouter.post(
           expiresIn: "1d"
         }
       );
+
+      await prisma.token.update({
+        where: { userId: req.decoded.userId },
+        data: {
+          accessToken: newAccessToken
+        }
+      });
       return res.send({ newAccessToken });
     } catch (e) {
       return res.status(500).send({ message: e.message });
