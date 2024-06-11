@@ -34,6 +34,20 @@ shopRouter.post("/:shopId/purchase", verifyToken, async (req, res) => {
       }
     });
 
+    //구매 후 판매자의 포인트 증가
+    const sellerData = await prisma.user.findUnique({
+      where: { id: shopData.sellerId },
+      select: {
+        points: true
+      }
+    });
+    await prisma.user.update({
+      where: { id: shopData.sellerId },
+      data: {
+        points: sellerData.points + shopData.sellingPrice * purchaseQuantity
+      }
+    });
+
     //구매자에게 해당 카드 추가
     let purchaseCardData;
     const sameCard = await prisma.card.findUnique({
