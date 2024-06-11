@@ -385,6 +385,9 @@ shopRouter.get("/:id", verifyToken, async (req, res) => {
         sellingPrice: true,
         sellingQuantity: true,
         remainingQuantity: true,
+        wishExchageDescription: true,
+        wishExchangeGenre: true,
+        wishExchangeGrade: true,
         card: {
           select: {
             image: true,
@@ -409,7 +412,12 @@ shopRouter.get("/:id", verifyToken, async (req, res) => {
       totalQuantity: data.sellingQuantity,
       remainingQuantity: data.remainingQuantity,
       seller_nickname,
-      isOwner: false
+      isOwner: false,
+      wishExchangeData: {
+        wishExchangeDescription: data.wishExchageDescription,
+        wishExchangeGenre: data.wishExchangeGenre,
+        wishExchangeGrade: data.wishExchangeGrade
+      }
     };
 
     let exchangeCardData;
