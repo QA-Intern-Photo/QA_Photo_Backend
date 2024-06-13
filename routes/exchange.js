@@ -240,6 +240,41 @@ exchangeRouter.post("/:id/exchange/accept", verifyToken, async (req, res) => {
         }
       });
     }
+
+    //판매자의 카드 totalQuantity 1만큼 감소
+    const sellerCardData = await prisma.card.findUnique({
+      where: {
+        id_ownerId: { id: shopCard.cardId, ownerId: shopCard.sellerId }
+      },
+      select: { totalQuantity: true }
+    });
+    await prisma.card.update({
+      where: {
+        id_ownerId: { id: shopCard.cardId, ownerId: shopCard.sellerId }
+      },
+      data: { totalQuantity: sellerCardData.totalQuantity - 1 }
+    });
+
+    //교환제시자의 카드 totalQuantity 1만큼 감소
+    const requesterCardData = await prisma.card.findUnique({
+      where: {
+        id_ownerId: {
+          id: exchangeCard.offeredCardId,
+          ownerId: exchangeCard.requesterId
+        }
+      },
+      select: { totalQuantity: true }
+    });
+    await prisma.card.update({
+      where: {
+        id_ownerId: {
+          id: exchangeCard.offeredCardId,
+          ownerId: exchangeCard.requesterId
+        }
+      },
+      data: { totalQuantity: requesterCardData.totalQuantity - 1 }
+    });
+
     //모든 교환이 성공적으로 이뤄졌다면 exchange 데이터베이스에서 삭제
     await prisma.exchange.delete({ where: { id } });
 

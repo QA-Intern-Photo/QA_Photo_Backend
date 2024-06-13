@@ -88,9 +88,22 @@ shopRouter.post("/:shopId/purchase", verifyToken, async (req, res) => {
       });
     }
 
+    //판매된 개수만큼 감소
     await prisma.shop.update({
       where: { id: shopId },
       data: { remainingQuantity: shopData.remainingQuantity - purchaseQuantity }
+    });
+    const sellerCardData = await prisma.card.findUnique({
+      where: {
+        id_ownerId: { id: shopData.cardId, ownerId: shopData.sellerId }
+      },
+      select: { totalQuantity: true }
+    });
+    await prisma.card.update({
+      where: {
+        id_ownerId: { id: shopData.cardId, ownerId: shopData.sellerId }
+      },
+      data: { totalQuantity: sellerCardData.totalQuantity - purchaseQuantity }
     });
 
     //구매 성공 알림 보내기

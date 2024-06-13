@@ -5,6 +5,7 @@ import { PrismaClient } from "@prisma/client";
 import { verifyToken } from "../util/jwt-verify.js";
 import { upload } from "../util/upload-image.js";
 import { getOrderBy, myCardGetOrderBy } from "../util/get-order-by.js";
+import { getCardCount } from "../util/get-card-count.js";
 const prisma = new PrismaClient();
 export const userRouter = express.Router();
 
@@ -109,6 +110,20 @@ userRouter.get("/my-cards", verifyToken, async (req, res) => {
     const hasNextPage = page < totalPages;
     const hasPrevPage = page > 1;
 
+    const cardCountData = await prisma.card.groupBy({
+      by: ["grade"],
+      where: {
+        ownerId: req.decoded.userId,
+        totalQuantity: { gt: 0 },
+        availableQuantity: { gt: 0 }
+      },
+      _count: {
+        grade: true
+      }
+    });
+
+    const cardCount = getCardCount(cardCountData);
+
     res.status(200).send({
       data,
       pagination: {
@@ -118,7 +133,8 @@ userRouter.get("/my-cards", verifyToken, async (req, res) => {
         pageSize: Number(size),
         hasNextPage,
         hasPrevPage
-      }
+      },
+      cardCount
     });
   } catch (e) {
     return res.status(500).send({ message: e.message });
@@ -220,6 +236,28 @@ userRouter.get("/my-cards/sales", verifyToken, async (req, res) => {
       };
     });
 
+    //판매카드 grade별 개수
+    const commonCount = await prisma.shop.count({
+      where: { sellerId: userId, card: { grade: "COMMON" } }
+    });
+    const rareCount = await prisma.shop.count({
+      where: { sellerId: userId, card: { grade: "RARE" } }
+    });
+    const superRareCount = await prisma.shop.count({
+      where: { sellerId: userId, card: { grade: "SUPER_RARE" } }
+    });
+    const legendaryCount = await prisma.shop.count({
+      where: { sellerId: userId, card: { grade: "LEGENDARY" } }
+    });
+
+    const cardCount = {
+      totalCount: commonCount + rareCount + superRareCount + legendaryCount,
+      commonCount,
+      rareCount,
+      superRareCount,
+      legendaryCount
+    };
+
     res.status(200).send({
       data: processedData,
       pagination: {
@@ -229,7 +267,8 @@ userRouter.get("/my-cards/sales", verifyToken, async (req, res) => {
         pageSize: Number(size),
         hasNextPage,
         hasPrevPage
-      }
+      },
+      cardCount
     });
   } catch (e) {
     return res.status(500).send({ message: e.message });
@@ -320,7 +359,27 @@ userRouter.get("/my-cards/exchange", verifyToken, async (req, res) => {
         quantity: 1
       };
     });
+    //판매카드 grade별 개수
+    const commonCount = await prisma.exchange.count({
+      where: { requesterId: userId, card: { grade: "COMMON" } }
+    });
+    const rareCount = await prisma.exchange.count({
+      where: { requesterId: userId, card: { grade: "RARE" } }
+    });
+    const superRareCount = await prisma.exchange.count({
+      where: { requesterId: userId, card: { grade: "SUPER_RARE" } }
+    });
+    const legendaryCount = await prisma.exchange.count({
+      where: { requesterId: userId, card: { grade: "LEGENDARY" } }
+    });
 
+    const cardCount = {
+      totalCount: commonCount + rareCount + superRareCount + legendaryCount,
+      commonCount,
+      rareCount,
+      superRareCount,
+      legendaryCount
+    };
     res.status(200).send({
       data: processedData,
       pagination: {
@@ -330,7 +389,8 @@ userRouter.get("/my-cards/exchange", verifyToken, async (req, res) => {
         pageSize: Number(size),
         hasNextPage,
         hasPrevPage
-      }
+      },
+      cardCount
     });
   } catch (e) {
     return res.status(500).send({ message: e.message });
@@ -345,33 +405,9 @@ userRouter.get("/profile", verifyToken, async (req, res) => {
       select: { id: true, email: true, nickname: true, points: true }
     });
 
-    const cardCountData = await prisma.card.groupBy({
-      by: ["grade"],
-      where: { ownerId: req.decoded.userId, totalQuantity: { gt: 0 } },
-      _count: {
-        grade: true
-      }
-    });
-
-    const cardCount = {
-      totalCount: 0,
-      commonCount: 0,
-      rareCount: 0,
-      superRareCount: 0,
-      legendaryCount: 0
-    };
-
-    cardCountData.map((v) => {
-      if (v.grade === "COMMON") cardCount.commonCount = v._count.grade;
-      if (v.grade === "RARE") cardCount.rareCount = v._count.grade;
-      if (v.grade === "SUPER_RARE") cardCount.superRareCount = v._count.grade;
-      if (v.grade === "LEGENDARY") cardCount.legendaryCount = v._count.grade;
-      cardCount.totalCount += v._count.grade;
-    });
-
     delete userData.password;
 
-    return res.status(200).send({ ...userData, cardCount });
+    return res.status(200).send({ ...userData });
   } catch (e) {
     return res.status(500).send({ message: e.message });
   }
