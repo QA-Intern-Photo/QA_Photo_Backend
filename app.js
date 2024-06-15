@@ -16,7 +16,7 @@ import { notificationRouter } from "./routes/notifications.js";
 const corsOptions = {
   origin: [
     "http://localhost:3000",
-    "https://qa-photo-frontend-deploy.vercel.app/"
+    "https://qa-photo-frontend-deploy.vercel.app"
   ]
 };
 const app = express();
